@@ -1,0 +1,454 @@
+basePath: /
+definitions:
+  server.fileInfoResponse:
+    properties:
+      data:
+        items:
+          type: integer
+        type: array
+      description:
+        type: string
+      downloadTimes:
+        type: integer
+      etag:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      owner:
+        type: string
+      price:
+        type: integer
+      size:
+        type: integer
+      upTime:
+        type: string
+      visitors:
+        type: integer
+    type: object
+  server.uploadResponse:
+    properties:
+      id:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: This is a data market server.
+  title: Data-Market API
+  version: "1.0"
+paths:
+  /files/{fileId}/collect:
+    post:
+      description: Collect file
+      parameters:
+      - description: File ID
+        in: path
+        name: fileId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "501":
+          description: Not Implemented
+          schema:
+            type: object
+      summary: Collect file
+      tags:
+      - files
+  /files/{fileId}/delete:
+    post:
+      description: Delete file
+      parameters:
+      - description: File ID
+        in: path
+        name: fileId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "501":
+          description: Not Implemented
+          schema:
+            type: object
+      summary: Delete file
+      tags:
+      - files
+  /files/{fileId}/downProduct:
+    post:
+      description: Down product
+      parameters:
+      - description: File ID
+        in: path
+        name: fileId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "501":
+          description: Not Implemented
+          schema:
+            type: object
+      summary: Down product
+      tags:
+      - files
+  /files/{fileId}/download:
+    get:
+      description: Download file
+      parameters:
+      - description: File ID
+        in: path
+        name: fileId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "501":
+          description: Not Implemented
+          schema:
+            type: object
+      summary: Download file
+      tags:
+      - files
+  /files/{fileId}/info:
+    get:
+      description: Get file info
+      parameters:
+      - description: File ID
+        in: path
+        name: fileId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.fileInfoResponse'
+        "501":
+          description: Not Implemented
+          schema:
+            type: object
+      summary: Get file info
+      tags:
+      - files
+  /files/{fileId}/purchase:
+    post:
+      description: Purchase file
+      parameters:
+      - description: File ID
+        in: path
+        name: fileId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "501":
+          description: Not Implemented
+          schema:
+            type: object
+      summary: Purchase file
+      tags:
+      - files
+  /files/{fileId}/share:
+    get:
+      description: Share file
+      parameters:
+      - description: File ID
+        in: path
+        name: fileId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "501":
+          description: Not Implemented
+          schema:
+            type: object
+      summary: Share file
+      tags:
+      - files
+  /files/{fileId}/uncollect:
+    post:
+      description: Uncollect file
+      parameters:
+      - description: File ID
+        in: path
+        name: fileId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "501":
+          description: Not Implemented
+          schema:
+            type: object
+      summary: Uncollect file
+      tags:
+      - files
+  /files/{fileId}/upProduct:
+    post:
+      description: Up product
+      parameters:
+      - description: File ID
+        in: path
+        name: fileId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "501":
+          description: Not Implemented
+          schema:
+            type: object
+      summary: Up product
+      tags:
+      - files
+  /files/{fileId}/updateInfo:
+    post:
+      description: Update file info
+      parameters:
+      - description: File ID
+        in: path
+        name: fileId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "501":
+          description: Not Implemented
+          schema:
+            type: object
+      summary: Update file info
+      tags:
+      - files
+  /files/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload file
+      parameters:
+      - description: File
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.uploadResponse'
+        "501":
+          description: Not Implemented
+          schema:
+            type: object
+      summary: Upload file
+      tags:
+      - files
+  /market/{address}/transactionList:
+    get:
+      consumes:
+      - application/json
+      description: Get user transaction list
+      parameters:
+      - description: address
+        in: path
+        name: address
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+      summary: Get user transaction list
+      tags:
+      - market
+  /market/purchase:
+    post:
+      consumes:
+      - application/json
+      description: Purchase
+      parameters:
+      - description: address
+        in: path
+        name: address
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+      summary: Purchase
+      tags:
+      - market
+  /nft/approve:
+    get:
+      consumes:
+      - application/json
+      description: Approve NFT
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Approve NFT
+      tags:
+      - NFT
+  /nft/list:
+    get:
+      consumes:
+      - application/json
+      description: List NFT
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: List NFT
+      tags:
+      - NFT
+  /nft/mint:
+    get:
+      consumes:
+      - application/json
+      description: Mint NFT
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Mint NFT
+      tags:
+      - NFT
+  /nft/share:
+    get:
+      consumes:
+      - application/json
+      description: Share NFT
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Share NFT
+      tags:
+      - NFT
+  /user/{address}/downloadedList:
+    get:
+      consumes:
+      - application/json
+      description: Get user downloaded list
+      parameters:
+      - description: address
+        in: path
+        name: address
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+      summary: Get user downloaded list
+      tags:
+      - user
+  /user/{address}/productList:
+    get:
+      consumes:
+      - application/json
+      description: Get user product list
+      parameters:
+      - description: address
+        in: path
+        name: address
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+      summary: Get user product list
+      tags:
+      - user
+  /user/{address}/purchasedList:
+    get:
+      consumes:
+      - application/json
+      description: Get user purchased list
+      parameters:
+      - description: address
+        in: path
+        name: address
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+      summary: Get user purchased list
+      tags:
+      - user
+swagger: "2.0"
