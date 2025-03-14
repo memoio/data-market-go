@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/data-market/internal/db"
 	"github.com/data-market/internal/logs"
 	"github.com/data-market/server"
 	"github.com/spf13/cobra"
@@ -23,9 +24,12 @@ var runCmd = &cobra.Command{
 	Use:   "run",
 	Short: "Run a server",
 	Run: func(cmd *cobra.Command, args []string) {
+
+		_ = db.G_DB
+
 		// new http server with port
 		srv := server.StartServer(port)
-
+		// run http server
 		go func() {
 			logger.Debugf("start http server at port:%s", port)
 			if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {

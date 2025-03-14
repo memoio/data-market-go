@@ -14,9 +14,10 @@ type handler struct {
 
 // Path: server/server.go
 func StartServer(port string) *http.Server {
-	// init
+	// init gin
 	gin.SetMode(gin.ReleaseMode)
 
+	// new engine
 	r := gin.Default()
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(200, "Welcome to Data Market")

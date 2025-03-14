@@ -11,10 +11,10 @@ import (
 
 var logger = logs.Logger("db")
 
-var DB *gorm.DB
+var G_DB *gorm.DB
 
 // 定义所有表模型
-type FileInfo struct {
+type File struct {
 	ID            uint   `gorm:"primaryKey;autoIncrement"`
 	Name          string `gorm:"not null"`
 	Description   string
@@ -36,66 +36,87 @@ type FileInfo struct {
 	IndexFileType         string `gorm:"index:idx_type_category,priority:2"`
 }
 
-type PurchaseHistory struct {
+func (File) TableName() string {
+	return "file_info"
+}
+
+type Purchase struct {
 	ID           uint      `gorm:"primaryKey;autoIncrement"`
-	UserAddress  string    `gorm:"not null;index:idx_user"`
+	UserAddress  string    `gorm:"not null"`
 	MemoDID      string    `gorm:"not null;column:memo_did"`
-	FileDID      string    `gorm:"not null;index:idx_file"`
+	FileDID      string    `gorm:"not null;index"`
 	PurchaseDate time.Time `gorm:"default:CURRENT_TIMESTAMP;index:idx_purchase_date"`
 	Price        string    `gorm:"not null"`
 }
 
-type DownloadHistory struct {
+func (Purchase) TableName() string {
+	return "purchase_record"
+}
+
+type Download struct {
 	ID           uint      `gorm:"primaryKey;autoIncrement"`
-	UserAddress  string    `gorm:"not null;index:idx_user"`
+	UserAddress  string    `gorm:"not null"`
 	MemoDID      string    `gorm:"not null;column:memo_did"`
-	FileDID      string    `gorm:"not null;index:idx_file"`
+	FileDID      string    `gorm:"not null;index"`
 	DownloadDate time.Time `gorm:"default:CURRENT_TIMESTAMP;index:idx_download_date"`
 }
 
-// MemoRecord 对应 memo_records 表
-type MemoRecord struct {
+func (Download) TableName() string {
+	return "download_record"
+}
+
+type MemoDID struct {
 	ID          uint   `gorm:"primaryKey;autoIncrement"`
 	MemoDID     string `gorm:"column:memo_did;type:TEXT;not null"`
 	UserAddress string `gorm:"column:user_address;type:TEXT;not null"`
 }
 
-// FileMemo 对应 file_memos 表
+func (MemoDID) TableName() string {
+	return "memodid"
+}
+
 type FileMemo struct {
 	FileDID string `gorm:"column:file_did;type:TEXT;not null;primaryKey"`
 	MemoDID string `gorm:"column:memo_did;type:TEXT;not null;primaryKey"`
 	AddType int    `gorm:"column:add_type;type:INTEGER;not null;check:add_type IN (1,2)"`
 }
 
-var g_DB *gorm.DB
+func (FileMemo) TableName() string {
+	return "file_memo"
+}
 
-func InitDB() (*gorm.DB, error) {
+func init() {
+	logger.Debug("init db..")
+
 	// 连接 SQLite 数据库（文件名为 market.db）
 	db, err := gorm.Open(sqlite.Open("market.db"), &gorm.Config{})
 	if err != nil {
-		return nil, fmt.Errorf("数据库连接失败: %v", err)
+		panic(fmt.Errorf("数据库连接失败: %v", err))
 	}
 
 	// 启用外键约束（SQLite 默认关闭）
 	_ = db.Exec("PRAGMA foreign_keys = ON")
 
+	logger.Debug("migrating tables..")
+
 	// 自动迁移表结构
 	err = db.AutoMigrate(
-		&FileInfo{},
-		&PurchaseHistory{},
-		&DownloadHistory{},
-		&MemoRecord{},
+		&File{},
+		&Purchase{},
+		&Download{},
+		&MemoDID{},
 		&FileMemo{},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("表创建失败: %v", err)
+		panic(fmt.Errorf("表创建失败: %v", err))
 	}
 
 	// 手动创建组合索引（GORM 自动迁移可能不会处理）
-	db.Exec("CREATE INDEX IF NOT EXISTS idx_type_category ON file_infos(file_type, category)")
-	db.Exec("CREATE INDEX IF NOT EXISTS idx_price ON file_infos(price)")
-	db.Exec("CREATE INDEX IF NOT EXISTS idx_upload_time ON file_infos(upload_time)")
-	db.Exec("CREATE INDEX IF NOT EXISTS idx_memo_did ON memo_records (memo_did)")
+	db.Exec("CREATE INDEX IF NOT EXISTS idx_type_category ON file_info(file_type, category)")
+	db.Exec("CREATE INDEX IF NOT EXISTS idx_price ON file_info(price)")
+	db.Exec("CREATE INDEX IF NOT EXISTS idx_upload_time ON file_info(upload_time)")
+	db.Exec("CREATE INDEX IF NOT EXISTS idx_memo_did ON memodid (memo_did)")
 
-	return db, nil
+	// save to global db
+	G_DB = db
 }
