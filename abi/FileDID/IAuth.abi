@@ -1,0 +1,1 @@
+[{"inputs":[{"internalType":"bytes32","name":"_h","type":"bytes32"},{"internalType":"bytes[5]","name":"signs","type":"bytes[5]"}],"name":"perm","outputs":[],"stateMutability":"nonpayable","type":"function"}]
