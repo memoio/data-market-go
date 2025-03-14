@@ -14,6 +14,7 @@ type handler struct {
 
 // Path: server/server.go
 func StartServer(port string) *http.Server {
+	// init
 	gin.SetMode(gin.ReleaseMode)
 
 	r := gin.Default()
@@ -21,15 +22,19 @@ func StartServer(port string) *http.Server {
 		c.JSON(200, "Welcome to Data Market")
 	})
 
+	// for swagger
 	docs.SwaggerInfo.Schemes = []string{"http", "https"}
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
+	// handler for requests
 	h := &handler{}
 
+	// register handler for all requests
 	loadFileModule(r.Group("/files"), h)
 	loadUserModule(r.Group("/user"), h)
 	loadNFTModule(r.Group("/nft"), h)
 	loadMarketModule(r.Group("/market"), h)
+
 	return &http.Server{
 		Addr:    ":" + port,
 		Handler: r,

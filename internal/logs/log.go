@@ -36,6 +36,8 @@ func init() {
 
 	mLogger = logger.Sugar()
 
+	fmt.Println("log level:", config.Cfg.LogLevel)
+
 	l := getLogLevel(config.Cfg.LogLevel)
 
 	mLogLevel.SetLevel(l)

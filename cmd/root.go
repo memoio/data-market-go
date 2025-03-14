@@ -23,6 +23,6 @@ func Exceute() {
 }
 
 func init() {
-	rootCmd.AddCommand(ServerCmd)
+	rootCmd.AddCommand(DaemonCmd)
 	rootCmd.AddCommand(versionCmd)
 }

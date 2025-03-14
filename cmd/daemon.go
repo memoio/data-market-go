@@ -8,9 +8,12 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/data-market/internal/logs"
 	"github.com/data-market/server"
 	"github.com/spf13/cobra"
 )
+
+var logger = logs.Logger("db")
 
 var (
 	port string
@@ -20,9 +23,11 @@ var runCmd = &cobra.Command{
 	Use:   "run",
 	Short: "Run a server",
 	Run: func(cmd *cobra.Command, args []string) {
+		// new http server with port
 		srv := server.StartServer(port)
 
 		go func() {
+			logger.Debugf("start http server at port:%s", port)
 			if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 				log.Fatalf("listen: %s\n", err)
 			}
@@ -43,9 +48,9 @@ var stopCmd = &cobra.Command{
 	},
 }
 
-var ServerCmd = &cobra.Command{
-	Use:   "server",
-	Short: "Server commands",
+var DaemonCmd = &cobra.Command{
+	Use:   "daemon",
+	Short: "daemon commands",
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
 	},
@@ -54,5 +59,5 @@ var ServerCmd = &cobra.Command{
 func init() {
 	runCmd.Flags().StringVarP(&port, "port", "p", "8080", "listen port")
 
-	ServerCmd.AddCommand(runCmd, stopCmd)
+	DaemonCmd.AddCommand(runCmd, stopCmd)
 }
