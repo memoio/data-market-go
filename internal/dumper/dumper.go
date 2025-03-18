@@ -2,8 +2,6 @@ package dumper
 
 import (
 	"context"
-	"flag"
-	"fmt"
 	"log"
 	"math/big"
 	"strings"
@@ -52,70 +50,33 @@ type Dumper struct {
 	indexedMap   map[common.Hash]abi.Arguments
 }
 
-// init a dumper with chain selected: local/dev
-func NewDumper(chain_ep, accountdidAddress, filedidAddress string) (dumper *Dumper, err error) {
-	dumper = &Dumper{
-		// store:        store,
-		endpoint:     chain_ep,
-		eventNameMap: make(map[common.Hash]string),
-		indexedMap:   make(map[common.Hash]abi.Arguments),
-	}
+// init a dumper with the env
+func NewDumper(env string) (dumper *Dumper, err error) {
+	// new Dumper
+	dumper = &Dumper{}
 
-	// set contract address
-	dumper.accountdid_ADDR = common.HexToAddress(accountdidAddress)
-	dumper.filedid_ADDR = common.HexToAddress(filedidAddress)
-
-	// accountdid abi
-	dumper.accountdid_ABI, err = abi.JSON(strings.NewReader(AccountDID_ABI))
-	if err != nil {
-		return dumper, err
-	}
-
-	// filedid abi
-	dumper.filedid_ABI, err = abi.JSON(strings.NewReader(FileDID_ABI))
-	if err != nil {
-		return dumper, err
-	}
-
-	// group all abi together
-	ABIs := []abi.ABI{dumper.accountdid_ABI, dumper.filedid_ABI}
-
-	// parse all abi for event and topic
-	for _, ABI := range ABIs {
-		// each event
-		for name, event := range ABI.Events {
-			// save event in dumper
-			dumper.eventNameMap[event.ID] = name
-			var indexed abi.Arguments
-			// each topic
-			for _, arg := range ABI.Events[name].Inputs {
-				if arg.Indexed {
-					indexed = append(indexed, arg)
-				}
-			}
-			// save topics for each event in dumper
-			dumper.indexedMap[event.ID] = indexed
-		}
-	}
-
-	// get block number from db
-	logger.Debug("getting block number from db")
-	blockNumber, err := database.GetBlockNumber()
-	if err != nil {
-		blockNumber = 0
-	}
-	logger.Debug("block number: ", blockNumber)
-
-	// set block number for dumper
-	dumper.fromBlock = big.NewInt(blockNumber)
+	// init dumper
+	logger.Debug("init dumper..")
+	dumper.Init(env)
 
 	return dumper, nil
 }
 
 // sync db with block chain every 10 sec
-func (d *Dumper) SubscribeGRID(ctx context.Context) {
+func (d *Dumper) Subscribe(ctx context.Context) {
+	// dial chain
+	logger.Info("connect chain")
+	client, err := ethclient.DialContext(context.TODO(), d.endpoint)
+	if err != nil {
+		log.Fatalf("connect chain failed when subscribe: %s", err)
+	}
+	defer client.Close()
+
 	for {
-		d.DumpGRID()
+		err := d.Dump(client)
+		if err != nil {
+			panic(err)
+		}
 
 		select {
 		case <-ctx.Done():
@@ -125,16 +86,8 @@ func (d *Dumper) SubscribeGRID(ctx context.Context) {
 	}
 }
 
-// dump all events of blocks into db
-func (d *Dumper) DumpGRID() error {
-	// dial chain
-	logger.Info("connect chain")
-	client, err := ethclient.DialContext(context.TODO(), d.endpoint)
-	if err != nil {
-		logger.Debug(err.Error())
-		return err
-	}
-	defer client.Close()
+// dump all event logs of blocks into db
+func (d *Dumper) Dump(client *ethclient.Client) error {
 
 	// get current chain block number
 	chainBlock, err := client.BlockNumber(context.Background())
@@ -145,7 +98,7 @@ func (d *Dumper) DumpGRID() error {
 	logger.Info("get current block number from chain: ", chainBlock)
 
 	// if no new chain block, return
-	if d.fromBlock.Cmp(new(big.Int).SetUint64(chainBlock)) > 0 {
+	if d.fromBlock.Cmp(new(big.Int).SetUint64(chainBlock)) >= 0 {
 		logger.Info("no new chain block, waiting..")
 		return nil
 	}
@@ -153,6 +106,7 @@ func (d *Dumper) DumpGRID() error {
 	logger.Debug("dump from block: ", d.fromBlock)
 
 	// filter event logs for all contracts
+	logger.Debug("filter event logs")
 	events, err := client.FilterLogs(context.TODO(), ethereum.FilterQuery{
 		FromBlock: d.fromBlock,
 		Addresses: []common.Address{d.accountdid_ADDR, d.filedid_ADDR},
@@ -161,9 +115,7 @@ func (d *Dumper) DumpGRID() error {
 		logger.Debug(err.Error())
 		return err
 	}
-
-	// record block
-	lastBlock := d.fromBlock
+	logger.Debug("event log number:", len(events))
 
 	// parse each event
 	for _, event := range events {
@@ -173,9 +125,14 @@ func (d *Dumper) DumpGRID() error {
 			continue
 		}
 
+		// handle each event log
 		switch eventName {
-		case "Register":
-			logger.Debug("==== Handle Register Event")
+		case "CreateDID":
+			logger.Debug("==== Handle CreateDID Event")
+		case "RegisterMfileDid":
+			logger.Debug("==== Handle RegisterMfileDid Event")
+		case "BuyRead":
+			logger.Debug("==== Handle BuyRead Event")
 			// err = d.HandleRegister(event)
 			// if err != nil {
 			// 	logger.Debug("handle register error: ", err.Error())
@@ -184,16 +141,16 @@ func (d *Dumper) DumpGRID() error {
 		default:
 			continue
 		}
-
-		// start from next block
-		if event.BlockNumber >= d.fromBlock.Uint64() {
-			d.fromBlock = big.NewInt(int64(event.BlockNumber) + 1)
-		}
 	}
 
-	// update block in db
-	if d.fromBlock.Cmp(lastBlock) > 0 {
-		database.SetBlockNumber(d.fromBlock.Int64())
+	// update from block to current chain block
+	d.fromBlock = big.NewInt(int64(chainBlock))
+
+	// update from block into db
+	logger.Debug("update from block into db: ", d.fromBlock)
+	err = database.SetBlockNumber(d.fromBlock.Int64())
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -222,41 +179,92 @@ func (d *Dumper) unpack(log types.Log, ABI abi.ABI, out interface{}) error {
 	return nil
 }
 
-// get did contract address from instance
-func (d *Dumper) getAddress() {
-	inputeth := flag.String("eth", "dev", "eth api Address;") //dev test or product
-	//sk := flag.String("sk", "", "signature for sending transaction")
-
-	flag.Parse()
+// get did contract address from instance, and get endpoint
+func (d *Dumper) Init(env string) (err error) {
+	// init map
+	d.eventNameMap = make(map[common.Hash]string)
+	d.indexedMap = make(map[common.Hash]abi.Arguments)
 
 	// get instance address and chain ep
-	instAddr, eth := com.GetInsEndPointByChain(*inputeth)
-	fmt.Println("instance address:", instAddr)
-	fmt.Println("endpoint:", eth)
+	instAddr, ep := com.GetInsEndPointByChain(env)
+	logger.Debug("instance address:", instAddr)
+	logger.Debug("endpoint:", ep)
+
+	// save endpoint
+	d.endpoint = ep
 
 	// get client
-	client, err := ethclient.DialContext(context.Background(), eth)
+	client, err := ethclient.DialContext(context.Background(), ep)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	// get instance
 	instIns, err := inst.NewInstance(instAddr, client)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	// get accountdid address
-	accdidAddr, err := instIns.Instances(&bind.CallOpts{}, 30)
+	d.accountdid_ADDR, err = instIns.Instances(&bind.CallOpts{}, 30)
 	if err != nil {
-		panic(err)
+		return err
 	}
-	fmt.Println("accountDID addr:", accdidAddr)
+	logger.Debug("accountDID addr:", d.accountdid_ADDR)
 
 	// get filedid address
-	filedidAddr, err := instIns.Instances(&bind.CallOpts{}, 34)
+	d.filedid_ADDR, err = instIns.Instances(&bind.CallOpts{}, 34)
 	if err != nil {
-		panic(err)
+		return err
 	}
-	fmt.Println("fileDID addr:", filedidAddr)
+	logger.Debug("fileDID addr:", d.filedid_ADDR)
+
+	// set accountdid abi
+	d.accountdid_ABI, err = abi.JSON(strings.NewReader(AccountDID_ABI))
+	if err != nil {
+		return err
+	}
+
+	// set filedid abi
+	d.filedid_ABI, err = abi.JSON(strings.NewReader(FileDID_ABI))
+	if err != nil {
+		return err
+	}
+
+	// group all abi together
+	ABIs := []abi.ABI{d.accountdid_ABI, d.filedid_ABI}
+
+	// parse all abi for event and topic
+	logger.Debug("parse event and topics in all abi")
+	for _, ABI := range ABIs {
+		// each event
+		for name, event := range ABI.Events {
+			// save event in dumper
+			d.eventNameMap[event.ID] = name
+			var indexed abi.Arguments
+			// each topic
+			for _, arg := range ABI.Events[name].Inputs {
+				if arg.Indexed {
+					indexed = append(indexed, arg)
+				}
+			}
+			// save topics for each event in dumper
+			d.indexedMap[event.ID] = indexed
+		}
+	}
+
+	// get block number from db
+	logger.Debug("getting block number from db")
+	blockNumber, err := database.GetBlockNumber()
+	if err != nil {
+		blockNumber = 0
+	}
+	logger.Debug("block number: ", blockNumber)
+
+	// set from block number for dumper
+	d.fromBlock = big.NewInt(blockNumber)
+
+	logger.Debug("init complete")
+
+	return nil
 }

@@ -2,6 +2,8 @@ package database
 
 import (
 	"fmt"
+	"log"
+	"time"
 
 	"github.com/data-market/internal/logs"
 	"gorm.io/driver/sqlite"
@@ -21,6 +23,32 @@ func init() {
 		panic(fmt.Errorf("数据库连接失败: %v", err))
 	}
 
+	// get sql db from gorm db
+	sqlDB, err := db.DB()
+	if err != nil {
+		panic(err)
+	}
+
+	// 设置连接池中空闲连接的最大数量。
+	sqlDB.SetMaxIdleConns(10)
+	// 设置打开数据库连接的最大数量。
+	sqlDB.SetMaxOpenConns(100)
+	// 设置超时时间
+	sqlDB.SetConnMaxLifetime(time.Second * 30)
+
+	// ping db
+	logger.Debug("ping db")
+	err = sqlDB.Ping()
+	if err != nil {
+		panic(err)
+	}
+
+	// 检查数据库连接示例
+	logger.Debug("checking db connection")
+	if err := db.Raw("SELECT 1").Error; err != nil {
+		log.Fatal("数据库连接失败: ", err)
+	}
+
 	// 启用外键约束（SQLite 默认关闭）
 	_ = db.Exec("PRAGMA foreign_keys = ON")
 
@@ -28,6 +56,7 @@ func init() {
 
 	// 自动迁移表结构
 	err = db.AutoMigrate(
+		&BlockNumber{},
 		&File{},
 		&Purchase{},
 		&Download{},

@@ -1,5 +1,7 @@
 package database
 
+import "log"
+
 var blockNumberKey = "block_number_key"
 
 type BlockNumber struct {
@@ -12,7 +14,13 @@ func SetBlockNumber(blockNumber int64) error {
 		BlockNumberKey: blockNumberKey,
 		BlockNumber:    blockNumber,
 	}
-	return G_DB.Save(&daBlockNumber).Error
+
+	if err := G_DB.Save(&daBlockNumber).Error; err != nil {
+		log.Printf("写入失败: %v (SQL: %s)", err, G_DB.Dialector.Explain(G_DB.Statement.SQL.String(), G_DB.Statement.Vars...))
+		return err
+	}
+
+	return nil
 }
 
 func GetBlockNumber() (int64, error) {

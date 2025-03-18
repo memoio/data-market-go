@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/data-market/internal/database"
+	"github.com/data-market/internal/dumper"
 	"github.com/data-market/internal/logs"
 	"github.com/data-market/server"
 	"github.com/spf13/cobra"
@@ -29,6 +31,15 @@ var runCmd = &cobra.Command{
 		logger.Debug("env:", env)
 
 		_ = database.G_DB
+
+		d, err := dumper.NewDumper(env)
+		if err != nil {
+			log.Fatalf("new dumper failed: %s", err)
+		}
+
+		// start subscribe the block
+		logger.Debug("start subscribe blocks")
+		go d.Subscribe(context.Background())
 
 		// new http server with port
 		srv := server.StartServer(port)
@@ -60,6 +71,7 @@ var DaemonCmd = &cobra.Command{
 	Short: "daemon commands",
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
+
 	},
 }
 
