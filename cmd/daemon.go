@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	db "github.com/data-market/internal/database"
+	"github.com/data-market/internal/database"
 	"github.com/data-market/internal/logs"
 	"github.com/data-market/server"
 	"github.com/spf13/cobra"
@@ -18,6 +18,7 @@ var logger = logs.Logger("db")
 
 var (
 	port string
+	env  string
 )
 
 var runCmd = &cobra.Command{
@@ -25,7 +26,9 @@ var runCmd = &cobra.Command{
 	Short: "Run a server",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		_ = db.G_DB
+		logger.Debug("env:", env)
+
+		_ = database.G_DB
 
 		// new http server with port
 		srv := server.StartServer(port)
@@ -61,7 +64,19 @@ var DaemonCmd = &cobra.Command{
 }
 
 func init() {
+	// add flag info for run cmd
 	runCmd.Flags().StringVarP(&port, "port", "p", "8080", "listen port")
+
+	runCmd.Flags().StringVarP(
+		&env,
+		"env",
+		"e",
+		"test", // 默认值
+		"设置运行环境\n可选值: test（测试环境）, dev（开发环境）, product（生产环境）\n默认使用 test 环境", // 详细说明
+	)
+
+	// 如果希望参数必填（默认值设为空字符串后）：
+	runCmd.MarkFlagRequired("env")
 
 	DaemonCmd.AddCommand(runCmd, stopCmd)
 }

@@ -2,20 +2,27 @@ package dumper
 
 import (
 	"context"
+	"flag"
+	"fmt"
+	"log"
 	"math/big"
 	"strings"
 	"time"
 
-	database "github.com/data-market/internal/database"
+	"github.com/data-market/internal/database"
 	"github.com/data-market/internal/go-contracts/accountdid"
 	"github.com/data-market/internal/go-contracts/filedid"
 	"github.com/data-market/internal/logs"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
+
+	com "github.com/memoio/contractsv2/common"
+	inst "github.com/memoio/contractsv2/go_contracts/instance"
 )
 
 var (
@@ -27,19 +34,26 @@ var (
 )
 
 type Dumper struct {
-	endpoint        string
-	contractABI     []abi.ABI
-	contractAddress []common.Address
-	// store           MapStore
+	// chain
+	endpoint string
+
+	// contract address
+	accountdid_ADDR common.Address
+	filedid_ADDR    common.Address
+
+	// contract abi
+	accountdid_ABI abi.ABI
+	filedid_ABI    abi.ABI
 
 	fromBlock *big.Int
 
+	// store           MapStore
 	eventNameMap map[common.Hash]string
 	indexedMap   map[common.Hash]abi.Arguments
 }
 
 // init a dumper with chain selected: local/dev
-func NewDumper(chain_ep string, registerAddress, marketAddress common.Address) (dumper *Dumper, err error) {
+func NewDumper(chain_ep, accountdidAddress, filedidAddress string) (dumper *Dumper, err error) {
 	dumper = &Dumper{
 		// store:        store,
 		endpoint:     chain_ep,
@@ -48,25 +62,26 @@ func NewDumper(chain_ep string, registerAddress, marketAddress common.Address) (
 	}
 
 	// set contract address
-	dumper.contractAddress = []common.Address{registerAddress, marketAddress}
+	dumper.accountdid_ADDR = common.HexToAddress(accountdidAddress)
+	dumper.filedid_ADDR = common.HexToAddress(filedidAddress)
 
 	// accountdid abi
-	accountdidABI, err := abi.JSON(strings.NewReader(AccountDID_ABI))
+	dumper.accountdid_ABI, err = abi.JSON(strings.NewReader(AccountDID_ABI))
 	if err != nil {
 		return dumper, err
 	}
 
 	// filedid abi
-	filedidABI, err := abi.JSON(strings.NewReader(FileDID_ABI))
+	dumper.filedid_ABI, err = abi.JSON(strings.NewReader(FileDID_ABI))
 	if err != nil {
 		return dumper, err
 	}
 
-	// set contract abi
-	dumper.contractABI = []abi.ABI{accountdidABI, filedidABI}
+	// group all abi together
+	ABIs := []abi.ABI{dumper.accountdid_ABI, dumper.filedid_ABI}
 
-	// parse and save topics for each events
-	for _, ABI := range dumper.contractABI {
+	// parse all abi for event and topic
+	for _, ABI := range ABIs {
 		// each event
 		for name, event := range ABI.Events {
 			// save event in dumper
@@ -137,10 +152,10 @@ func (d *Dumper) DumpGRID() error {
 
 	logger.Debug("dump from block: ", d.fromBlock)
 
-	// filter event logs from block
+	// filter event logs for all contracts
 	events, err := client.FilterLogs(context.TODO(), ethereum.FilterQuery{
 		FromBlock: d.fromBlock,
-		Addresses: d.contractAddress,
+		Addresses: []common.Address{d.accountdid_ADDR, d.filedid_ADDR},
 	})
 	if err != nil {
 		logger.Debug(err.Error())
@@ -188,34 +203,60 @@ func (d *Dumper) DumpGRID() error {
 func (d *Dumper) unpack(log types.Log, ABI abi.ABI, out interface{}) error {
 	// get event name from map with hash
 	eventName := d.eventNameMap[log.Topics[0]]
+
 	// get all topics
 	indexed := d.indexedMap[log.Topics[0]]
 
-	//logger.Debug("log data: %x", log.Data)
-	//logger.Debug("log topics: ", log.Topics)
-
-	// logger.Info("event name: ", eventName)
-	//logger.Debug("topics in map: ", indexed)
-
 	// parse data
-	//logger.Debug("parse data, event name: ", eventName)
 	err := ABI.UnpackIntoInterface(out, eventName, log.Data)
 	if err != nil {
 		return err
 	}
-	//logger.Debug("unpack out(no topics):", out)
 
 	// parse topic
-	//logger.Debug("parse topic")
 	err = abi.ParseTopics(out, indexed, log.Topics[1:])
 	if err != nil {
 		return err
 	}
-	//logger.Debug("unpack out(with topics):", out)
 
 	return nil
 }
 
-// func recoverAddressFromTx(tx *types.Transaction) (common.Address, error) {
-// 	return types.LatestSignerForChainID(tx.ChainId()).Sender(tx)
-// }
+// get did contract address from instance
+func (d *Dumper) getAddress() {
+	inputeth := flag.String("eth", "dev", "eth api Address;") //dev test or product
+	//sk := flag.String("sk", "", "signature for sending transaction")
+
+	flag.Parse()
+
+	// get instance address and chain ep
+	instAddr, eth := com.GetInsEndPointByChain(*inputeth)
+	fmt.Println("instance address:", instAddr)
+	fmt.Println("endpoint:", eth)
+
+	// get client
+	client, err := ethclient.DialContext(context.Background(), eth)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// get instance
+	instIns, err := inst.NewInstance(instAddr, client)
+	if err != nil {
+		panic(err)
+	}
+
+	// get accountdid address
+	accdidAddr, err := instIns.Instances(&bind.CallOpts{}, 30)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("accountDID addr:", accdidAddr)
+
+	// get filedid address
+	filedidAddr, err := instIns.Instances(&bind.CallOpts{}, 34)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("fileDID addr:", filedidAddr)
+}
