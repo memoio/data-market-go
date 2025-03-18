@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/data-market/internal/db"
+	db "github.com/data-market/internal/database"
 	"github.com/data-market/internal/logs"
 	"github.com/data-market/server"
 	"github.com/spf13/cobra"
