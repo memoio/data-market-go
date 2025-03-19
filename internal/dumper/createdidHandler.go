@@ -90,16 +90,12 @@ func (d *Dumper) HandleCreateDID(log types.Log) error {
 		UserAddress: addressHex,
 	}
 
-	//logger.Info("============= store MemoDID..", memoDID)
 	// store db
 	err = memoDID.CreateMemoDID()
 	if err != nil {
 		logger.Debug("store AddNode error: ", err.Error())
 		return err
 	}
-
-	// // test set online
-	// database.SetOnline(nodeInfo.Address, nodeInfo.Id, true)
 
 	return nil
 }
