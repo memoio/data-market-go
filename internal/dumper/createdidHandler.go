@@ -2,6 +2,7 @@ package dumper
 
 import (
 	"context"
+	"crypto/ecdsa"
 	"encoding/hex"
 
 	did "did-solidity/go-contracts/did"
@@ -10,6 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
@@ -50,17 +52,42 @@ func (d *Dumper) HandleCreateDID(log types.Log) error {
 		return err
 	}
 
-	logger.Debug("pubkey data:", pubkey.PubKeyData)
-	// 将字节转换为小写的十六进制字符串（无0x前缀）
-	addressHex := hex.EncodeToString(pubkey.PubKeyData)
-	addr := common.HexToAddress(addressHex)
+	var addressHex string
 
-	logger.Debug("user address:", addr)
+	logger.Debug("pubkey data:", pubkey.PubKeyData)
+
+	// parse address from pubkey
+	switch pubkey.MethodType {
+	// for type 2020, pubkey data is the address
+	case "EcdsaSecp256k1RecoveryMethod2020":
+		// 将字节转换为小写的十六进制字符串（无0x前缀）
+		addressHex = hex.EncodeToString(pubkey.PubKeyData)
+
+	// for type 2019, the pubkey data is the compressed pubkey
+	case "EcdsaSecp256k1VerificationKey2019":
+		// 1. 解压缩公钥
+		pubKey, err := crypto.DecompressPubkey(pubkey.PubKeyData)
+		if err != nil {
+			logger.Debug("解压缩公钥失败: " + err.Error())
+			return err
+		}
+
+		// 2. 生成以太坊地址
+		address := pubKeyToAddress(pubKey)
+
+		// to string
+		addressHex = address.String()
+
+	default:
+		logger.Debug("error pubkey.methodType, not EcdsaSecp256k1VerificationKey2019 or EcdsaSecp256k1RecoveryMethod2020")
+	}
+
+	logger.Debug("user address:", addressHex)
 
 	// make object for db store
 	memoDID := database.MemoDID{
 		MemoDID:     out.DID,
-		UserAddress: addr.String(),
+		UserAddress: addressHex,
 	}
 
 	//logger.Info("============= store MemoDID..", memoDID)
@@ -75,4 +102,19 @@ func (d *Dumper) HandleCreateDID(log types.Log) error {
 	// database.SetOnline(nodeInfo.Address, nodeInfo.Id, true)
 
 	return nil
+}
+
+// pubKeyToAddress 从公钥生成以太坊地址
+func pubKeyToAddress(pubKey *ecdsa.PublicKey) common.Address {
+	// 将公钥转换为未压缩格式（65字节）
+	uncompressedPubKey := crypto.FromECDSAPub(pubKey)
+
+	// 提取X和Y坐标（跳过04前缀）
+	pubKeyBytes := uncompressedPubKey[1:]
+
+	// 计算Keccak-256哈希
+	hash := crypto.Keccak256(pubKeyBytes)
+
+	// 取最后20字节作为地址
+	return common.BytesToAddress(hash[len(hash)-20:])
 }
