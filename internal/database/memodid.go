@@ -9,3 +9,9 @@ type MemoDID struct {
 func (MemoDID) TableName() string {
 	return "memodid"
 }
+
+// store node info to db
+func (did *MemoDID) CreateMemoDID() error {
+	// store memodid
+	return G_DB.Create(did).Error
+}

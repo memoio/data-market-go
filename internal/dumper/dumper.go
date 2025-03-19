@@ -129,6 +129,10 @@ func (d *Dumper) Dump(client *ethclient.Client) error {
 		switch eventName {
 		case "CreateDID":
 			logger.Debug("==== Handle CreateDID Event")
+			err = d.HandleCreateDID(event)
+			if err != nil {
+				logger.Debug("handle createdid error: ", err.Error())
+			}
 		case "RegisterMfileDid":
 			logger.Debug("==== Handle RegisterMfileDid Event")
 		case "BuyRead":
