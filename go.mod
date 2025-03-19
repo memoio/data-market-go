@@ -4,9 +4,13 @@ go 1.23.0
 
 toolchain go1.23.7
 
-replace github.com/memoio/contractsv2 => ../../memov2-contractsv2
+replace (
+	did-solidity => ../did-solidity
+	github.com/memoio/contractsv2 => ../../memov2-contractsv2
+)
 
 require (
+	did-solidity v0.0.0-00010101000000-000000000000
 	github.com/ethereum/go-ethereum v1.15.5
 	github.com/gin-gonic/gin v1.10.0
 	github.com/memoio/contractsv2 v0.0.0-00010101000000-000000000000
