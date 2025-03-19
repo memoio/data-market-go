@@ -32,54 +32,10 @@ func (d *Dumper) HandleCreateDID(log types.Log) error {
 	logger.Info("memodid:", out.DID)
 	logger.Info("out: ", out)
 
-	// get user address with memodid
-
-	// connect chain
-	client, err := ethclient.DialContext(context.Background(), d.endpoint)
+	addressHex, err := d.getAddrWithDID(out.DID)
 	if err != nil {
+		logger.Debug("get address with memodid failed: ", err)
 		return err
-	}
-
-	// get instance
-	didIns, err := did.NewAccountDid(d.accountdid_ADDR, client)
-	if err != nil {
-		return err
-	}
-
-	// get pubkey with memodid
-	pubkey, err := didIns.GetMasterVerification(&bind.CallOpts{}, out.DID)
-	if err != nil {
-		return err
-	}
-
-	var addressHex string
-
-	logger.Debug("pubkey data:", pubkey.PubKeyData)
-
-	// parse address from pubkey
-	switch pubkey.MethodType {
-	// for type 2020, pubkey data is the address
-	case "EcdsaSecp256k1RecoveryMethod2020":
-		// 将字节转换为小写的十六进制字符串（无0x前缀）
-		addressHex = hex.EncodeToString(pubkey.PubKeyData)
-
-	// for type 2019, the pubkey data is the compressed pubkey
-	case "EcdsaSecp256k1VerificationKey2019":
-		// 1. 解压缩公钥
-		pubKey, err := crypto.DecompressPubkey(pubkey.PubKeyData)
-		if err != nil {
-			logger.Debug("解压缩公钥失败: " + err.Error())
-			return err
-		}
-
-		// 2. 生成以太坊地址
-		address := pubKeyToAddress(pubKey)
-
-		// to string
-		addressHex = address.String()
-
-	default:
-		logger.Debug("error pubkey.methodType, not EcdsaSecp256k1VerificationKey2019 or EcdsaSecp256k1RecoveryMethod2020")
 	}
 
 	logger.Debug("user address:", addressHex)
@@ -113,4 +69,59 @@ func pubKeyToAddress(pubKey *ecdsa.PublicKey) common.Address {
 
 	// 取最后20字节作为地址
 	return common.BytesToAddress(hash[len(hash)-20:])
+}
+
+// get user address with memodid
+func (d *Dumper) getAddrWithDID(memodid string) (addr string, err error) {
+
+	// get user address with memodid
+
+	// connect chain
+	client, err := ethclient.DialContext(context.Background(), d.endpoint)
+	if err != nil {
+		return "", err
+	}
+
+	// get instance
+	didIns, err := did.NewAccountDid(d.accountdid_ADDR, client)
+	if err != nil {
+		return "", err
+	}
+
+	// get pubkey with memodid
+	pubkey, err := didIns.GetMasterVerification(&bind.CallOpts{}, memodid)
+	if err != nil {
+		return "", err
+	}
+	logger.Debug("pubkey data:", pubkey.PubKeyData)
+
+	var addressHex string
+
+	// parse address from pubkey
+	switch pubkey.MethodType {
+	// for type 2020, pubkey data is the address
+	case "EcdsaSecp256k1RecoveryMethod2020":
+		// 将字节转换为小写的十六进制字符串（无0x前缀）
+		addressHex = hex.EncodeToString(pubkey.PubKeyData)
+
+	// for type 2019, the pubkey data is the compressed pubkey
+	case "EcdsaSecp256k1VerificationKey2019":
+		// 1. 解压缩公钥
+		pubKey, err := crypto.DecompressPubkey(pubkey.PubKeyData)
+		if err != nil {
+			logger.Debug("解压缩公钥失败: " + err.Error())
+			return "", err
+		}
+
+		// 2. 生成以太坊地址
+		address := pubKeyToAddress(pubKey)
+
+		// to string
+		addressHex = address.String()
+
+	default:
+		logger.Debug("error pubkey.methodType, not EcdsaSecp256k1VerificationKey2019 or EcdsaSecp256k1RecoveryMethod2020")
+	}
+
+	return addressHex, nil
 }
