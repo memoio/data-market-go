@@ -58,7 +58,6 @@ func init() {
 	err = db.AutoMigrate(
 		&BlockNumber{},
 		&File{},
-		&Purchase{},
 		&Download{},
 		&MemoDID{},
 		&FileMemo{},
