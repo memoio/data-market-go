@@ -18,9 +18,19 @@ func init() {
 	logger.Debug("init db..")
 
 	// 连接 SQLite 数据库（文件名为 market.db）
-	db, err := gorm.Open(sqlite.Open("market.db"), &gorm.Config{})
+	// db, err := gorm.Open(sqlite.Open("market.db"), &gorm.Config{})
+	// if err != nil {
+	// 	panic(fmt.Errorf("数据库连接失败: %v", err))
+	// }
+
+	// 关键参数配置
+	dsn := "file:market.db?cache=shared&mode=rwc&_journal_mode=WAL&_busy_timeout=5000"
+	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
+		// 推荐配置参数
+		DisableForeignKeyConstraintWhenMigrating: true, // 避免外键约束问题
+	})
 	if err != nil {
-		panic(fmt.Errorf("数据库连接失败: %v", err))
+		panic(err)
 	}
 
 	// get sql db from gorm db

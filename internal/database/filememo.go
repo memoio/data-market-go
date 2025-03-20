@@ -5,6 +5,7 @@ import "time"
 type FileMemo struct {
 	ID           uint      `gorm:"primaryKey;autoIncrement"`
 	FileDID      string    `gorm:"column:file_did;type:TEXT;not null;primaryKey"`
+	FileID       uint      `gorm:"column:file_id;index;not null"` // 对应File表的ID
 	MemoDID      string    `gorm:"column:memo_did;type:TEXT;not null;primaryKey"`
 	UserAddress  string    `gorm:"column:user_address;type:TEXT;not null"`
 	OwnerAddress string    `gorm:"column:owner_address;type:TEXT;not null"`
