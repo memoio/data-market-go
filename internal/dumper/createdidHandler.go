@@ -29,8 +29,8 @@ func (d *Dumper) HandleCreateDID(log types.Log) error {
 		return err
 	}
 
-	logger.Info("memodid:", out.DID)
-	logger.Info("out: ", out)
+	logger.Debug("memodid:", out.DID)
+	logger.Debug("out: ", out)
 
 	// get buyer
 	addressHex, err := d.getAddrWithDID(out.DID)

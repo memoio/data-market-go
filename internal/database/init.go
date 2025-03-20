@@ -61,6 +61,7 @@ func init() {
 		&Download{},
 		&MemoDID{},
 		&FileMemo{},
+		&Collection{},
 	)
 	if err != nil {
 		panic(fmt.Errorf("表创建失败: %v", err))

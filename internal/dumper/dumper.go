@@ -120,6 +120,7 @@ func (d *Dumper) Dump(client *ethclient.Client) error {
 	}
 	logger.Debug("event log number:", len(events))
 
+	tmp := 0
 	// parse each event
 	for _, event := range events {
 		// topic0 is the event name
@@ -147,6 +148,12 @@ func (d *Dumper) Dump(client *ethclient.Client) error {
 
 		default:
 			continue
+		}
+
+		// for test, 10 records only
+		tmp++
+		if tmp > 10 {
+			break
 		}
 	}
 

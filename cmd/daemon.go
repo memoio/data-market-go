@@ -45,7 +45,7 @@ var runCmd = &cobra.Command{
 		srv := server.StartServer(port)
 		// run http server
 		go func() {
-			logger.Debugf("start http server at port:%s", port)
+			logger.Info("start http server at port:%s", port)
 			if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 				log.Fatalf("listen: %s\n", err)
 			}
