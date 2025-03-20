@@ -32,13 +32,14 @@ func (d *Dumper) HandleCreateDID(log types.Log) error {
 	logger.Info("memodid:", out.DID)
 	logger.Info("out: ", out)
 
+	// get buyer
 	addressHex, err := d.getAddrWithDID(out.DID)
 	if err != nil {
 		logger.Debug("get address with memodid failed: ", err)
 		return err
 	}
 
-	logger.Debug("user address:", addressHex)
+	logger.Debug("buyer address:", addressHex)
 
 	// make object for db store
 	memoDID := database.MemoDID{
@@ -73,16 +74,13 @@ func pubKeyToAddress(pubKey *ecdsa.PublicKey) common.Address {
 
 // get user address with memodid
 func (d *Dumper) getAddrWithDID(memodid string) (addr string, err error) {
-
-	// get user address with memodid
-
 	// connect chain
 	client, err := ethclient.DialContext(context.Background(), d.endpoint)
 	if err != nil {
 		return "", err
 	}
 
-	// get instance
+	// get account did instance
 	didIns, err := did.NewAccountDid(d.accountdid_ADDR, client)
 	if err != nil {
 		return "", err

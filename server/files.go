@@ -1,12 +1,21 @@
 package server
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+)
 
 func loadFileModule(r *gin.RouterGroup, h *handler) {
 	r.POST("/upload", h.uploadFile)
 	r.GET("/:fileId/download", h.downloadFile)
 	r.GET("/:fileId/info", h.getFileInfo)
 	r.POST("/:fileId/delete", h.deleteFile)
+	r.POST("/:fileId/collect", h.collectFile)
+	r.POST("/:fileId/uncollect", h.uncollectFile)
+	r.POST("/:fileId/updateInfo", h.updateFileInfo)
+	r.POST("/:fileId/purchase", h.purchaseFile)
+	r.GET("/:fileId/share", h.shareFile)
+	r.POST("/:fileId/upProduct", h.upProduct)
+	r.POST("/:fileId/downProduct", h.downProduct)
 }
 
 // Files godoc
@@ -20,7 +29,33 @@ func loadFileModule(r *gin.RouterGroup, h *handler) {
 //	@Success		200		{object}	uploadResponse
 //	@Failure		501		{object}	object
 //	@Router			/files/upload [post]
-func (h *handler) uploadFile(c *gin.Context) {}
+func (h *handler) uploadFile(c *gin.Context) {
+	// todo:
+	// call putObjectHandle interface in middleware to upload file to mefs
+	// the result of putObjectHandle is the cid of uploaded file
+	// use this cid to generate a mfiledid
+	// call registerMfileDid(string memory mfileDid, string memory _encode, FileType _ftype, string memory _controller, uint256 _price, string[] memory _keywords)
+	// params needed: mfiledid, encode, ftype(private/public), controller, price, keywords
+
+	// client, err := ethclient.DialContext(context.TODO(), c.endpoint)
+	// if err != nil {
+	// 	return err
+	// }
+	// defer client.Close()
+
+	// // todo: get proxyAddr from instance
+
+	// proxyIns, err := proxy.NewProxy(c.proxyAddr, client)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// tx, err := proxyIns.RegisterMfileDid(c.didTransactor, c.did.Identifier, encode, ftype, controller.Identifier, price, keywords)
+	// if err != nil {
+	// 	return err
+	// }
+
+}
 
 // Files godoc
 //
@@ -59,3 +94,87 @@ func (h *handler) getFileInfo(c *gin.Context) {}
 //	@Failure		501		{object}	object
 //	@Router			/files/{fileId}/delete [post]
 func (h *handler) deleteFile(c *gin.Context) {}
+
+// Files godoc
+//
+//	@Summary		Collect file
+//	@Description	Collect file
+//	@Tags			files
+//	@Produce		json
+//	@Param			fileId	path		string	true	"File ID"
+//	@Success		200		{object}	object
+//	@Failure		501		{object}	object
+//	@Router			/files/{fileId}/collect [post]
+func (h *handler) collectFile(c *gin.Context) {}
+
+// Files godoc
+//
+//	@Summary		Uncollect file
+//	@Description	Uncollect file
+//	@Tags			files
+//	@Produce		json
+//	@Param			fileId	path		string	true	"File ID"
+//	@Success		200		{object}	object
+//	@Failure		501		{object}	object
+//	@Router			/files/{fileId}/uncollect [post]
+func (h *handler) uncollectFile(c *gin.Context) {}
+
+// Files godoc
+//
+//	@Summary		Update file info
+//	@Description	Update file info
+//	@Tags			files
+//	@Produce		json
+//	@Param			fileId	path		string	true	"File ID"
+//	@Success		200		{object}	object
+//	@Failure		501		{object}	object
+//	@Router			/files/{fileId}/updateInfo [post]
+func (h *handler) updateFileInfo(c *gin.Context) {}
+
+// Files godoc
+//
+//	@Summary		Purchase file
+//	@Description	Purchase file
+//	@Tags			files
+//	@Produce		json
+//	@Param			fileId	path		string	true	"File ID"
+//	@Success		200		{object}	object
+//	@Failure		501		{object}	object
+//	@Router			/files/{fileId}/purchase [post]
+func (h *handler) purchaseFile(c *gin.Context) {}
+
+// Files godoc
+//
+//	@Summary		Share file
+//	@Description	Share file
+//	@Tags			files
+//	@Produce		json
+//	@Param			fileId	path		string	true	"File ID"
+//	@Success		200		{object}	object
+//	@Failure		501		{object}	object
+//	@Router			/files/{fileId}/share [get]
+func (h *handler) shareFile(c *gin.Context) {}
+
+// Files godoc
+//
+//	@Summary		Up product
+//	@Description	Up product
+//	@Tags			files
+//	@Produce		json
+//	@Param			fileId	path		string	true	"File ID"
+//	@Success		200		{object}	object
+//	@Failure		501		{object}	object
+//	@Router			/files/{fileId}/upProduct [post]
+func (h *handler) upProduct(c *gin.Context) {}
+
+// Files godoc
+//
+//	@Summary		Down product
+//	@Description	Down product
+//	@Tags			files
+//	@Produce		json
+//	@Param			fileId	path		string	true	"File ID"
+//	@Success		200		{object}	object
+//	@Failure		501		{object}	object
+//	@Router			/files/{fileId}/downProduct [post]
+func (h *handler) downProduct(c *gin.Context) {}

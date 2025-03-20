@@ -10,6 +10,7 @@ import (
 )
 
 type handler struct {
+	endpoint string
 }
 
 // Path: server/server.go
@@ -29,6 +30,8 @@ func StartServer(port string) *http.Server {
 
 	// handler for requests
 	h := &handler{}
+
+	// todo: add endpoint and proxy address for handler
 
 	// register handler for all requests
 	loadFileModule(r.Group("/files"), h)

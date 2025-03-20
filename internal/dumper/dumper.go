@@ -35,6 +35,9 @@ type Dumper struct {
 	// chain
 	endpoint string
 
+	// the instance contract address
+	instance_ADDR common.Address
+
 	// contract address
 	accountdid_ADDR common.Address
 	filedid_ADDR    common.Address
@@ -194,8 +197,9 @@ func (d *Dumper) Init(env string) (err error) {
 	logger.Debug("instance address:", instAddr)
 	logger.Debug("endpoint:", ep)
 
-	// save endpoint
+	// save endpoint and instance
 	d.endpoint = ep
+	d.instance_ADDR = instAddr
 
 	// get client
 	client, err := ethclient.DialContext(context.Background(), ep)
