@@ -15,11 +15,11 @@ func loadFileModule(r *gin.RouterGroup, h *handler) {
 	r.POST("/:fileId/delete", h.deleteFile)
 	r.POST("/:fileId/collect", h.collectFile)
 	r.POST("/:fileId/uncollect", h.uncollectFile)
-	r.POST("/:fileId/updateInfo", h.updateFileInfo)
-	r.POST("/:fileId/purchase", h.purchaseFile)
+	r.POST("/:fileId/update-info", h.updateFileInfo)
+	//r.POST("/:fileId/purchase", h.purchaseFile)
 	r.GET("/:fileId/share", h.shareFile)
-	r.POST("/:fileId/upProduct", h.upProduct)
-	r.POST("/:fileId/downProduct", h.downProduct)
+	r.POST("/:fileId/up-product", h.upProduct)
+	r.POST("/:fileId/down-product", h.downProduct)
 }
 
 // Files godoc
@@ -115,7 +115,25 @@ func (h *handler) getFileInfo(c *gin.Context) {
 //	@Success		200		{object}	object
 //	@Failure		501		{object}	object
 //	@Router			/files/{fileId}/delete [post]
-func (h *handler) deleteFile(c *gin.Context) {}
+func (h *handler) deleteFile(c *gin.Context) {
+	fid := c.Param("fileId")
+
+	// 删除记录
+	result := h.db.Delete(&database.File{}, fid)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete file"})
+		return
+	}
+
+	// 检查是否删除了记录
+	if result.RowsAffected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
+		return
+	}
+
+	// 返回成功响应
+	c.JSON(http.StatusOK, gin.H{"message": "File deleted successfully"})
+}
 
 // Files godoc
 //
@@ -171,10 +189,30 @@ func (h *handler) collectFile(c *gin.Context) {
 //	@Tags			files
 //	@Produce		json
 //	@Param			fileId	path		string	true	"File ID"
+//	@Param 			userAddr 	query 		string  false 	"user"
 //	@Success		200		{object}	object
 //	@Failure		501		{object}	object
 //	@Router			/files/{fileId}/uncollect [post]
-func (h *handler) uncollectFile(c *gin.Context) {}
+func (h *handler) uncollectFile(c *gin.Context) {
+	fid := c.Param("fileId")
+	userAddress := c.Query("userAddr")
+
+	// 删除记录
+	result := h.db.Where("file_id = ? AND user_address = ?", fid, userAddress).Delete(&database.Collection{})
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete from collection"})
+		return
+	}
+
+	// 检查是否删除了记录
+	if result.RowsAffected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Record not found"})
+		return
+	}
+
+	// 返回成功响应
+	c.JSON(http.StatusOK, gin.H{"message": "Deleted from collection successfully"})
+}
 
 // Files godoc
 //
@@ -186,7 +224,32 @@ func (h *handler) uncollectFile(c *gin.Context) {}
 //	@Success		200		{object}	object
 //	@Failure		501		{object}	object
 //	@Router			/files/{fileId}/updateInfo [post]
-func (h *handler) updateFileInfo(c *gin.Context) {}
+func (h *handler) updateFileInfo(c *gin.Context) {
+	// 获取 file_id
+	fid := c.Param("fileId")
+
+	// 查询数据库中是否存在该记录
+	var file database.File
+	if err := h.db.First(&file, fid).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
+		return
+	}
+
+	// 从表单中获取字段值
+	if err := c.ShouldBind(&file); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid form data"})
+		return
+	}
+
+	// 更新记录
+	if err := h.db.Save(&file).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update file"})
+		return
+	}
+
+	// 返回成功响应
+	c.JSON(http.StatusOK, gin.H{"message": "File updated successfully", "data": file})
+}
 
 // Files godoc
 //
