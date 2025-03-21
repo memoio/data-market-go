@@ -13,6 +13,7 @@ type File struct {
 	Category      string    `gorm:"not null"`
 	OwnerAddress  string    `gorm:"not null;index:idx_owner"`
 	UploadTime    time.Time `gorm:"default:CURRENT_TIMESTAMP"`
+	PublishState  int       `gorm:"not null;default:0;index:idx_publish_state"` // 发布状态：0-未上架，1-已上架，2-已下架
 	PublishTime   *time.Time
 	Price         string `gorm:"not null;default:'0'"`
 	FileSize      int64  `gorm:"not null"`

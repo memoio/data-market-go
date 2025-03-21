@@ -2,7 +2,6 @@ package server
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/data-market/internal/database"
 	"github.com/gin-gonic/gin"
@@ -29,18 +28,10 @@ func (h *handler) getMarketAddressTransactionList(c *gin.Context) {
 	// get param
 	buyer := c.Param("address")
 
-	type TransactionRecord struct {
-		FileName     string    `json:"fileName"`
-		Description  string    `json:"description"`
-		Price        string    `json:"price"`
-		BuyTime      time.Time `json:"buyTime"`
-		BuyerAddress string    `json:"buyerAddress"`
-	}
-
 	var records []TransactionRecord
 
 	// query db
-	err := database.G_DB.Model(&database.FileMemo{}).
+	err := h.db.Model(&database.FileMemo{}).
 		Select(`file_info.name AS file_name,
                 file_info.description,
                 file_info.price,

@@ -4,13 +4,16 @@ import (
 	"net/http"
 
 	"github.com/data-market/docs"
+	"github.com/data-market/internal/database"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"gorm.io/gorm"
 )
 
 type handler struct {
 	endpoint string
+	db       *gorm.DB
 }
 
 // Path: server/server.go
@@ -30,6 +33,7 @@ func StartServer(port string) *http.Server {
 
 	// handler for requests
 	h := &handler{}
+	h.db = database.G_DB
 
 	// todo: add endpoint and proxy address for handler
 
