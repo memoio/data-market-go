@@ -18,8 +18,8 @@ func loadFileModule(r *gin.RouterGroup, h *handler) {
 	r.POST("/:fileId/update-info", h.updateFileInfo)
 	//r.POST("/:fileId/purchase", h.purchaseFile)
 	r.GET("/:fileId/share", h.shareFile)
-	r.POST("/:fileId/up-product", h.upProduct)
-	r.POST("/:fileId/down-product", h.downProduct)
+	r.POST("/:fileId/publish", h.publish)
+	r.POST("/:fileId/unpublish", h.unpublish)
 }
 
 // Files godoc
@@ -277,24 +277,82 @@ func (h *handler) shareFile(c *gin.Context) {}
 
 // Files godoc
 //
-//	@Summary		Up product
-//	@Description	Up product
+//	@Summary		Publish
+//	@Description	Publish
 //	@Tags			files
 //	@Produce		json
 //	@Param			fileId	path		string	true	"File ID"
 //	@Success		200		{object}	object
 //	@Failure		501		{object}	object
-//	@Router			/files/{fileId}/upProduct [post]
-func (h *handler) upProduct(c *gin.Context) {}
+//	@Router			/files/{fileId}/publish [post]
+func (h *handler) publish(c *gin.Context) {
+	// 获取 file_id
+	fileID := c.Param("file_id")
+
+	// 查询当前文件的 publish_state
+	var file database.File
+	if err := h.db.Select("publish_state").First(&file, fileID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
+		return
+	}
+
+	// 判断文件是否已经上架
+	if file.PublishState == 1 {
+		c.JSON(http.StatusOK, gin.H{"message": "File is already published"})
+		return
+	}
+
+	// 更新 publish_state 为 1（已上架），并记录上架时间
+	result := h.db.Model(&database.File{}).Where("file_id = ?", fileID).Updates(map[string]interface{}{
+		"publish_state": 1,
+		"publish_time":  time.Now(), // 记录上架时间
+	})
+
+	// 检查是否更新成功
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update publish state"})
+		return
+	}
+
+	// 检查是否有记录被更新
+	if result.RowsAffected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
+		return
+	}
+
+	// 返回成功响应
+	c.JSON(http.StatusOK, gin.H{"message": "File published successfully"})
+}
 
 // Files godoc
 //
-//	@Summary		Down product
-//	@Description	Down product
+//	@Summary		Un publish
+//	@Description	Un publish
 //	@Tags			files
 //	@Produce		json
 //	@Param			fileId	path		string	true	"File ID"
 //	@Success		200		{object}	object
 //	@Failure		501		{object}	object
-//	@Router			/files/{fileId}/downProduct [post]
-func (h *handler) downProduct(c *gin.Context) {}
+//	@Router			/files/{fileId}/unpublish [post]
+func (h *handler) unpublish(c *gin.Context) {
+	// 获取 file_id
+	fid := c.Param("file_id")
+
+	// 更新 publish_state 为 2（已下架）
+	result := h.db.Model(&database.File{}).Where("file_id = ?", fid).Update("publish_state", 2)
+
+	// 检查是否更新成功
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update publish state"})
+		return
+	}
+
+	// 检查是否有记录被更新
+	if result.RowsAffected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
+		return
+	}
+
+	// 返回成功响应
+	c.JSON(http.StatusOK, gin.H{"message": "File unpublished successfully"})
+}
