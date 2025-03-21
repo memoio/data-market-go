@@ -23,6 +23,11 @@ func StartServer(port string) *http.Server {
 
 	// new engine
 	r := gin.Default()
+
+	// for form file
+	r.MaxMultipartMemory = 100 << 20 // 100 MB
+
+	// welcome handler
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(200, "Welcome to Data Market")
 	})
