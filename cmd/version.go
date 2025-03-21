@@ -7,6 +7,9 @@ import (
 )
 
 var version = "0.0.1"
+
+var BuildFlag string
+
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version number",
