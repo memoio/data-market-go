@@ -2,6 +2,7 @@ package dumper
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"math/big"
 	"strings"
@@ -78,7 +79,8 @@ func (d *Dumper) Subscribe(ctx context.Context) {
 	for {
 		err := d.Dump(client)
 		if err != nil {
-			panic(err)
+			logger.Debug(err)
+			continue
 		}
 
 		select {
@@ -115,8 +117,8 @@ func (d *Dumper) Dump(client *ethclient.Client) error {
 		Addresses: []common.Address{d.accountdid_ADDR, d.filedid_ADDR},
 	})
 	if err != nil {
-		logger.Debug(err.Error())
-		return err
+		logger.Debug("error when filter logs: ", err.Error())
+		return fmt.Errorf("filter logs failed: %v", err)
 	}
 	logger.Debug("event log number:", len(events))
 

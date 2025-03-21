@@ -3,13 +3,14 @@ package server
 import (
 	"net/http"
 
+	"github.com/data-market/internal/database"
 	"github.com/gin-gonic/gin"
 )
 
 func loadUserModule(r *gin.RouterGroup, h *handler) {
-	r.GET("/:address/productList", h.getAddressProductList)
-	r.GET("/:address/downloadedList", h.getAddressDownloadedList)
-	r.GET("/:address/purchasedList", h.getAddressPurchasedList)
+	r.GET("/:address/product-list", h.getAddressProductList)
+	r.GET("/:address/download-list", h.getAddressDownloadedList)
+	r.GET("/:address/purchase-list", h.getAddressPurchasedList)
 }
 
 // user godoc
@@ -25,31 +26,62 @@ func loadUserModule(r *gin.RouterGroup, h *handler) {
 //	@Router			/user/{address}/productList/{state} [get]
 func (h *handler) getAddressProductList(c *gin.Context) {
 	ownerAddress := c.Param("address")
+	if ownerAddress == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ownerAddress参数必填"})
+		return
+	}
 
-	// response data
-	var files []File
-
-	// 执行数据库查询
-	result := h.db.Where("owner_address = ?", ownerAddress).Find(&files)
+	// 2. 构建查询
+	var files []OwnerFileResponse
+	err := h.db.Model(&database.File{}).
+		// 显式指定字段映射（数据库列名）
+		Select(
+			"name",
+			"file_did",
+			"file_type",
+			"category",
+			"price",
+			"file_size",
+			"upload_time",
+			"publish_state",
+			"publish_time",
+			"purchase_count",
+			"download_count",
+			"view_count",
+			"description",
+			"e_tag",
+		).
+		Where("owner_address = ?", ownerAddress). // 使用数据库列名
+		Order("upload_time DESC").
+		Scan(&files).Error
 
 	// 处理查询错误
-	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, Response{
-			Code:    500,
-			Message: "Database query failed",
-			Data:    nil,
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    500,
+			"message": "Database query failed",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	// 处理空结果
+	if len(files) == 0 {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    200,
+			"message": "No records found",
+			"data":    []interface{}{}, // 返回空数组
 		})
 		return
 	}
 
 	// 返回成功响应
-	c.JSON(http.StatusOK, Response{
-		Code:    200,
-		Message: "Success",
-		Data:    files,
+	c.JSON(http.StatusOK, gin.H{
+		"code":    200,
+		"message": "Success",
+		"data":    files,
 	})
 
-	c.JSON(200, gin.H{})
 }
 
 // user godoc
@@ -63,7 +95,55 @@ func (h *handler) getAddressProductList(c *gin.Context) {
 //	@Success		200		{object}	object
 //	@Router			/user/{address}/downloadedList [get]
 func (h *handler) getAddressDownloadedList(c *gin.Context) {
-	c.JSON(200, gin.H{})
+	// 获取请求参数
+	userAddress := c.Param("address")
+	if userAddress == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    400,
+			"message": "userAddress parameter is required",
+		})
+		return
+	}
+
+	// 执行联表查询
+	var results []FileDownloadResponse
+	err := h.db.Model(&database.Download{}).
+		Select(
+			"file_info.name as file_name",
+			"file_info.description as file_description",
+			"file_info.price as file_price",
+			"downloads.download_date as download_time",
+		).
+		Joins("LEFT JOIN file_info ON downloads.file_id = file_info.id").
+		Where("downloads.user_address = ?", userAddress).
+		Scan(&results).Error
+
+	// 处理查询错误
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    500,
+			"message": "Database query failed",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	// 处理空结果
+	if len(results) == 0 {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    200,
+			"message": "No records found",
+			"data":    []interface{}{}, // 返回空数组
+		})
+		return
+	}
+
+	// 返回成功响应
+	c.JSON(http.StatusOK, gin.H{
+		"code":    200,
+		"message": "Success",
+		"data":    results,
+	})
 }
 
 // user godoc

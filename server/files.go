@@ -1,6 +1,10 @@
 package server
 
 import (
+	"net/http"
+	"time"
+
+	"github.com/data-market/internal/database"
 	"github.com/gin-gonic/gin"
 )
 
@@ -81,7 +85,25 @@ func (h *handler) downloadFile(c *gin.Context) {
 //	@Success		200		{object}	fileInfoResponse
 //	@Failure		501		{object}	object
 //	@Router			/files/{fileId}/info [get]
-func (h *handler) getFileInfo(c *gin.Context) {}
+func (h *handler) getFileInfo(c *gin.Context) {
+	fid := c.Param("fileId")
+	if fid == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "fid is required"})
+		return
+	}
+
+	var file database.File
+
+	// 使用 GORM 查询数据库
+	result := h.db.First(&file, fid)
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
+		return
+	}
+
+	// 返回查询结果
+	c.JSON(http.StatusOK, file)
+}
 
 // Files godoc
 //
@@ -102,10 +124,45 @@ func (h *handler) deleteFile(c *gin.Context) {}
 //	@Tags			files
 //	@Produce		json
 //	@Param			fileId	path		string	true	"File ID"
+//	@Param 			userAddr 	query 		string  false 	"user"
 //	@Success		200		{object}	object
 //	@Failure		501		{object}	object
 //	@Router			/files/{fileId}/collect [post]
-func (h *handler) collectFile(c *gin.Context) {}
+func (h *handler) collectFile(c *gin.Context) {
+	fid := c.Param("fileId")
+	userAddress := c.Query("userAddr")
+
+	// 查询文件信息
+	var file database.File
+	if err := h.db.First(&file, fid).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
+		return
+	}
+
+	// 查询 MemoDID 信息
+	var memoDID database.MemoDID
+	if err := h.db.Where("user_address = ?", userAddress).First(&memoDID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "MemoDID not found for the user"})
+		return
+	}
+
+	// 创建收藏记录
+	collection := database.Collection{
+		UserAddress: userAddress,
+		FileID:      file.FileID,
+		MemoDID:     memoDID.MemoDID,
+		CollectTime: time.Now(),
+	}
+
+	// 写入数据库
+	if err := h.db.Create(&collection).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add to collection"})
+		return
+	}
+
+	// 返回成功响应
+	c.JSON(http.StatusOK, gin.H{"message": "Added to collection successfully", "data": collection})
+}
 
 // Files godoc
 //

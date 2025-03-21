@@ -6,7 +6,7 @@ import (
 
 type Download struct {
 	ID           uint      `gorm:"primaryKey;autoIncrement"`
-	UserAddress  string    `gorm:"not null"`
+	UserAddress  string    `gorm:"not null;index:idx_user_address"` // 新增索引
 	FileID       uint      `gorm:"not null;index:idx_file_id"`
 	MemoDID      string    `gorm:"not null;column:memo_did"`
 	FileDID      string    `gorm:"not null;index"`
@@ -14,5 +14,5 @@ type Download struct {
 }
 
 func (Download) TableName() string {
-	return "download_record"
+	return "downloads"
 }
