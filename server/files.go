@@ -476,7 +476,7 @@ func (h *handler) purchaseFile(c *gin.Context) {}
 //	@Failure		501		{object}	object
 //	@Router			/files/{fileId}/share [get]
 func (h *handler) shareFile(c *gin.Context) {
-	// todo:
+	// todo: send grantRead tx from the frontend
 }
 
 // Files godoc

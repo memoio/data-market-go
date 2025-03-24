@@ -42,3 +42,16 @@ type FileDownloadResponse struct {
 	FilePrice       string    `json:"filePrice"`
 	DownloadTime    time.Time `json:"downloadTime"`
 }
+
+type NFT struct {
+	Contract struct {
+		Address string `json:"address"`
+	} `json:"contract"`
+	ID struct {
+		TokenID string `json:"tokenId"`
+	} `json:"id"`
+	Title    string `json:"title"` // 可选，取决于 Alchemy 返回的字段
+	Metadata struct {
+		Image string `json:"image"` // NFT 图片 URL
+	} `json:"metadata"`
+}
