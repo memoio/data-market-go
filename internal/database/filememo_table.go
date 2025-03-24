@@ -4,9 +4,9 @@ import "time"
 
 type FileMemo struct {
 	ID           uint      `gorm:"primaryKey;autoIncrement"`
-	FileDID      string    `gorm:"column:file_did;type:TEXT;not null;primaryKey"`
+	FileDID      string    `gorm:"column:file_did;type:TEXT;not null"`
 	FileID       uint      `gorm:"column:file_id;index;not null"` // 对应File表的ID
-	MemoDID      string    `gorm:"column:memo_did;type:TEXT;not null;primaryKey"`
+	MemoDID      string    `gorm:"column:memo_did;type:TEXT;not null"`
 	UserAddress  string    `gorm:"column:user_address;type:TEXT;not null"`
 	OwnerAddress string    `gorm:"column:owner_address;type:TEXT;not null"`
 	BuyTime      time.Time `gorm:"column:buy_time;type:TIMESTAMP;not null;default:CURRENT_TIMESTAMP"`

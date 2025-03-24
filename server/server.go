@@ -5,11 +5,14 @@ import (
 
 	"github.com/data-market/docs"
 	"github.com/data-market/internal/database"
+	"github.com/data-market/internal/logs"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/gorm"
 )
+
+var logger = logs.Logger("server")
 
 type handler struct {
 	endpoint string

@@ -2,9 +2,11 @@ package server
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/data-market/internal/database"
@@ -44,12 +46,8 @@ func (h *handler) uploadFile(c *gin.Context) {
 	// call registerMfileDid(string memory mfileDid, string memory _encode, FileType _ftype, string memory _controller, uint256 _price, string[] memory _keywords)
 	// params needed: mfiledid, encode, ftype(private/public), controller, price, keywords
 
-	// 获取用户地址
-	userAddress := c.PostForm("address")
-	if userAddress == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "address is required"})
-		return
-	}
+	// 获取客户端的 Authorization 头
+	authHeader := c.GetHeader("Authorization")
 
 	// 获取上传的文件
 	file, err := c.FormFile("file")
@@ -83,10 +81,13 @@ func (h *handler) uploadFile(c *gin.Context) {
 		return
 	}
 
+	// 从表单获取参数
+	sign := c.PostForm("sign")
+	area := c.PostForm("area")
+
 	// 添加其他表单字段
-	_ = writer.WriteField("address", userAddress)
-	_ = writer.WriteField("sign", "your_sign_value") // 替换为实际的 sign 值
-	_ = writer.WriteField("area", "your_area_value") // 替换为实际的 area 值
+	_ = writer.WriteField("sign", sign) // 替换为实际的 sign 值
+	_ = writer.WriteField("area", area) // 替换为实际的 area 值
 
 	// 关闭 multipart writer
 	writer.Close()
@@ -100,6 +101,9 @@ func (h *handler) uploadFile(c *gin.Context) {
 
 	// 设置请求头
 	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	// 将客户端的 Authorization 头添加到中间件的请求中
+	req.Header.Set("Authorization", authHeader)
 
 	// 发送请求
 	client := &http.Client{}
@@ -179,7 +183,98 @@ func (h *handler) uploadFile(c *gin.Context) {
 //	@Failure		501		{object}	object
 //	@Router			/files/{fileId}/download [get]
 func (h *handler) downloadFile(c *gin.Context) {
-	c.JSON(200, gin.H{"message": "success"})
+	// get fileid
+	fid := c.Param("fileId")
+
+	logger.Debug("file id:", fid)
+
+	// get filedid from file table
+	var file database.File
+
+	// 使用 GORM 查询数据库
+	result := h.db.First(&file, fid)
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
+		return
+	}
+
+	fileDID := file.FileDID
+
+	logger.Debug("file did:", fileDID)
+
+	// get cid from file did
+	parts := strings.Split(fileDID, ":")
+	cid := parts[len(parts)]
+	logger.Debug("cid:", cid)
+
+	// 构造中间件的URL
+	middlewareURL := fmt.Sprintf("http://localhost:8080//ipfs/getObject/%s", cid)
+
+	// 从请求中获取必要的参数
+	sign := c.Query("sign")
+
+	// 获取客户端的 Authorization 头
+	authHeader := c.GetHeader("Authorization")
+
+	// 构造请求
+	req, err := http.NewRequest("GET", middlewareURL, nil)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create request"})
+		return
+	}
+
+	// 添加必要的参数和头信息
+	query := req.URL.Query()
+	query.Add("sign", sign)
+	req.URL.RawQuery = query.Encode()
+
+	// 将客户端的 Authorization 头添加到中间件的请求中
+	req.Header.Set("Authorization", authHeader)
+
+	// 发送请求
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send request to middleware"})
+		return
+	}
+	defer resp.Body.Close()
+
+	// 检查中间件返回的状态码
+	if resp.StatusCode != http.StatusOK {
+		c.JSON(resp.StatusCode, gin.H{"error": "Middleware returned an error"})
+		return
+	}
+
+	// 将中间件返回的文件流直接转发给客户端
+	extraHeaders := map[string]string{
+		"Content-Disposition": resp.Header.Get("Content-Disposition"),
+	}
+
+	c.DataFromReader(resp.StatusCode, resp.ContentLength, resp.Header.Get("Content-Type"), resp.Body, extraHeaders)
+
+	// 解释代码
+	// 构造中间件的URL：你需要指定中间件的地址和路径。
+
+	// 获取参数：从客户端的请求中获取 cid、和 sign 参数。
+
+	// 	获取客户端的 Authorization 头：
+
+	// 使用 c.GetHeader("Authorization") 获取客户端请求中的 Authorization 头。
+
+	// 这个头包含了访问令牌（token）。
+
+	// 将 Authorization 头转发到中间件：
+
+	// 在构造中间件的请求时，将客户端的 Authorization 头添加到请求中：req.Header.Set("Authorization", authHeader)。
+
+	// 这样中间件在收到请求后，会通过它的内置中间件完成 token 到 address 的转换，并设置到它的 context 中。
+
+	// 构造请求：使用 http.NewRequest 创建一个新的 HTTP 请求，并将参数添加到查询字符串中。
+
+	// 发送请求：使用 http.Client 发送请求到中间件。
+
+	// 处理响应：检查中间件返回的状态码，如果状态码不是 200，则返回错误。否则，将中间件返回的文件流直接转发给客户端。
 }
 
 // Files godoc
@@ -380,7 +475,9 @@ func (h *handler) purchaseFile(c *gin.Context) {}
 //	@Success		200		{object}	object
 //	@Failure		501		{object}	object
 //	@Router			/files/{fileId}/share [get]
-func (h *handler) shareFile(c *gin.Context) {}
+func (h *handler) shareFile(c *gin.Context) {
+	// todo:
+}
 
 // Files godoc
 //

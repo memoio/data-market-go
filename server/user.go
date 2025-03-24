@@ -157,5 +157,39 @@ func (h *handler) getAddressDownloadedList(c *gin.Context) {
 //	@Success		200		{object}	object
 //	@Router			/user/{address}/purchasedList [get]
 func (h *handler) getAddressPurchasedList(c *gin.Context) {
-	c.JSON(200, gin.H{})
+	// 从URL参数获取用户地址
+	userAddress := c.Param("address")
+	if userAddress == "" {
+		c.JSON(400, gin.H{"error": "user address is required"})
+		return
+	}
+
+	// 第一步：从FileMemo表中查询该用户的所有文件ID
+	var fileMemos []database.FileMemo
+	if err := h.db.Where("user_address = ?", userAddress).Find(&fileMemos).Error; err != nil {
+		c.JSON(500, gin.H{"error": "failed to query file memos"})
+		return
+	}
+
+	// 如果没有记录，直接返回空数组
+	if len(fileMemos) == 0 {
+		c.JSON(200, gin.H{"files": []database.File{}})
+		return
+	}
+
+	// 收集所有唯一的FileID
+	fileIDs := make([]uint, 0, len(fileMemos))
+	for _, memo := range fileMemos {
+		fileIDs = append(fileIDs, memo.FileID)
+	}
+
+	// 第二步：从File表中查询这些文件ID对应的完整文件信息
+	var files []database.File
+	if err := h.db.Where("file_id IN ?", fileIDs).Find(&files).Error; err != nil {
+		c.JSON(500, gin.H{"error": "failed to query files"})
+		return
+	}
+
+	// 返回查询结果
+	c.JSON(200, gin.H{"files": files})
 }
