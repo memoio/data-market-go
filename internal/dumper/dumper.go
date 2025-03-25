@@ -52,6 +52,8 @@ type Dumper struct {
 	// store           MapStore
 	eventNameMap map[common.Hash]string
 	indexedMap   map[common.Hash]abi.Arguments
+
+	delta int64
 }
 
 // init a dumper with the env
@@ -93,83 +95,105 @@ func (d *Dumper) Subscribe(ctx context.Context) {
 
 // dump all event logs of blocks into db
 func (d *Dumper) Dump(client *ethclient.Client) error {
+	// dump with step delta
+	for {
+		// get current chain block number
+		chainBlock, err := client.BlockNumber(context.Background())
+		if err != nil {
+			logger.Debug("get block number error:", err)
+			return err
+		}
+		logger.Info("dumping, get current block number from chain: ", chainBlock)
 
-	// get current chain block number
-	chainBlock, err := client.BlockNumber(context.Background())
-	if err != nil {
-		logger.Debug("get block number error:", err)
-		return err
-	}
-	logger.Info("get current block number from chain: ", chainBlock)
-
-	// if no new chain block, return
-	if d.fromBlock.Cmp(new(big.Int).SetUint64(chainBlock)) >= 0 {
-		logger.Info("no new chain block, waiting..")
-		return nil
-	}
-
-	logger.Debug("dump from block: ", d.fromBlock)
-
-	// filter event logs for all contracts
-	logger.Debug("filter event logs")
-	events, err := client.FilterLogs(context.TODO(), ethereum.FilterQuery{
-		FromBlock: d.fromBlock,
-		Addresses: []common.Address{d.accountdid_ADDR, d.filedid_ADDR},
-	})
-	if err != nil {
-		logger.Debug("error when filter logs: ", err.Error())
-		return fmt.Errorf("filter logs failed: %v", err)
-	}
-	logger.Debug("event log number:", len(events))
-
-	tmp := 0
-	// parse each event
-	for _, event := range events {
-		// topic0 is the event name
-		eventName, ok1 := d.eventNameMap[event.Topics[0]]
-		if !ok1 {
-			continue
+		// if no new chain block, return
+		if d.fromBlock.Cmp(new(big.Int).SetUint64(chainBlock)) >= 0 {
+			logger.Info("no new chain block, waiting..")
+			return nil
 		}
 
-		// handle each event log
-		switch eventName {
-		case "CreateDID":
-			logger.Debug("==== Handle CreateDID Event")
-			err = d.HandleCreateDID(event)
-			if err != nil {
-				logger.Debug("handle createdid error: ", err.Error())
-			}
-		case "RegisterMfileDid":
-			logger.Debug("==== Handle RegisterMfileDid Event")
-		case "BuyRead":
-			logger.Debug("==== Handle BuyRead Event")
-			err = d.HandleBuyRead(event)
-			if err != nil {
-				logger.Debug("handle buyread error: ", err.Error())
+		// set toBlock to fromBlock + delta
+		toBlock := new(big.Int)
+		toBlock.Add(d.fromBlock, new(big.Int).SetInt64(d.delta))
+		// if toBlock beyond chainBlock, set toBlock to chainBlock
+		if toBlock.Cmp(new(big.Int).SetUint64(chainBlock)) >= 0 {
+			toBlock = new(big.Int).Set(new(big.Int).SetUint64(chainBlock))
+		}
+
+		logger.Debugf("dump fromBlock: %s, toBlock: %s\n", d.fromBlock.String(), toBlock.String())
+
+		logger.Debugf("filter event logs in %v blocks\n", d.delta)
+		// filter event logs for all contracts
+		events, err := client.FilterLogs(context.TODO(), ethereum.FilterQuery{
+			FromBlock: d.fromBlock,
+			ToBlock:   toBlock,
+			Addresses: []common.Address{d.accountdid_ADDR, d.filedid_ADDR},
+		})
+		if err != nil {
+			// reduce delta by times of 10
+			d.delta = d.delta / 10
+			if d.delta < 1 {
+				d.delta = 1
 			}
 
-		default:
-			continue
+			logger.Debug("error when filter logs: ", err.Error())
+			return fmt.Errorf("filter logs failed: %v", err)
+		} else {
+			// increase delta by times of 10
+			d.delta = d.delta * 10
+			if d.delta > 10000 {
+				d.delta = 10000
+			}
+		}
+		logger.Debug("event log number:", len(events))
+
+		tmp := 0
+		// parse each event
+		for _, event := range events {
+			// topic0 is the event name
+			eventName, ok1 := d.eventNameMap[event.Topics[0]]
+			if !ok1 {
+				continue
+			}
+
+			// handle each event log
+			switch eventName {
+			case "CreateDID":
+				logger.Debug("==== Handle CreateDID Event")
+				err = d.HandleCreateDID(event)
+				if err != nil {
+					logger.Debug("handle createdid error: ", err.Error())
+				}
+			case "RegisterMfileDid":
+				logger.Debug("==== Handle RegisterMfileDid Event")
+			case "BuyRead":
+				logger.Debug("==== Handle BuyRead Event")
+				err = d.HandleBuyRead(event)
+				if err != nil {
+					logger.Debug("handle buyread error: ", err.Error())
+				}
+
+			default:
+				continue
+			}
+
+			// for test, 10 records only
+			tmp++
+			if tmp > 10 {
+				break
+			}
 		}
 
-		// for test, 10 records only
-		tmp++
-		if tmp > 10 {
-			break
+		// update from block to current chain block
+		d.fromBlock = toBlock
+
+		// update from block into db
+		logger.Debug("update from block into db: ", d.fromBlock)
+		err = database.SetBlockNumber(d.fromBlock.Int64())
+		if err != nil {
+			return err
 		}
 	}
 
-	// update from block to current chain block
-	d.fromBlock = big.NewInt(int64(chainBlock))
-
-	// update from block into db
-	logger.Debug("update from block into db: ", d.fromBlock)
-	err = database.SetBlockNumber(d.fromBlock.Int64())
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // unpack a log
@@ -197,6 +221,9 @@ func (d *Dumper) unpack(log types.Log, ABI abi.ABI, out interface{}) error {
 
 // get did contract address from instance, and get endpoint
 func (d *Dumper) Init(env string) (err error) {
+	// init delta
+	d.delta = 100000
+
 	// init map
 	d.eventNameMap = make(map[common.Hash]string)
 	d.indexedMap = make(map[common.Hash]abi.Arguments)

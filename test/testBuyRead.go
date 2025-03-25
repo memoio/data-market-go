@@ -1,4 +1,4 @@
-package dumper
+package test
 
 import (
 	"context"
@@ -96,4 +96,16 @@ func TestBuyRead(t *testing.T) {
 	}
 
 	t.Log("Transaction confirmed successfully!")
+}
+
+func TestGrantRead() {
+
+}
+
+func TestRegisterDID() {
+
+}
+
+func TestCreateDID() {
+
 }
