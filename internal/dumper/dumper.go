@@ -221,8 +221,14 @@ func (d *Dumper) unpack(log types.Log, ABI abi.ABI, out interface{}) error {
 
 // get did contract address from instance, and get endpoint
 func (d *Dumper) Init(env string) (err error) {
-	// set block number to 4000000, for test chain only
-	database.SetBlockNumber(6250000)
+	// set block number, for test chain only
+	blockNumber, err := database.GetBlockNumber()
+	if err != nil {
+		blockNumber = 0
+	}
+	if blockNumber < 6250000 {
+		database.SetBlockNumber(6250000)
+	}
 
 	// init delta
 	d.delta = 10000
@@ -302,7 +308,7 @@ func (d *Dumper) Init(env string) (err error) {
 
 	// get block number from db
 	logger.Debug("getting block number from db")
-	blockNumber, err := database.GetBlockNumber()
+	blockNumber, err = database.GetBlockNumber()
 	if err != nil {
 		blockNumber = 0
 	}

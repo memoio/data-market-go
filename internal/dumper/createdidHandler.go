@@ -29,7 +29,7 @@ func (d *Dumper) HandleCreateDID(log types.Log) error {
 		return err
 	}
 
-	logger.Debug("memodid:", out.DID)
+	logger.Debug("memodid: ", out.DID)
 	logger.Debug("out: ", out)
 
 	// get buyer
@@ -39,7 +39,7 @@ func (d *Dumper) HandleCreateDID(log types.Log) error {
 		return err
 	}
 
-	logger.Debug("buyer address:", addressHex)
+	logger.Debug("buyer address: ", addressHex)
 
 	// make object for db store
 	memoDID := database.MemoDID{
@@ -91,7 +91,7 @@ func (d *Dumper) getAddrWithDID(memodid string) (addr string, err error) {
 	if err != nil {
 		return "", err
 	}
-	logger.Debug("pubkey data:", pubkey.PubKeyData)
+	logger.Debug("pubkey data: ", hex.EncodeToString(pubkey.PubKeyData))
 
 	var addressHex string
 
