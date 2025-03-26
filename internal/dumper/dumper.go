@@ -106,7 +106,7 @@ func (d *Dumper) Dump(client *ethclient.Client) error {
 		logger.Info("dumping, get current block number from chain: ", chainBlock)
 
 		// if no new chain block, return
-		if d.fromBlock.Cmp(new(big.Int).SetUint64(chainBlock)) >= 0 {
+		if d.fromBlock.Cmp(new(big.Int).SetUint64(chainBlock)) > 0 {
 			logger.Info("no new chain block, waiting..")
 			return nil
 		}
@@ -184,7 +184,7 @@ func (d *Dumper) Dump(client *ethclient.Client) error {
 		}
 
 		// update from block to current chain block
-		d.fromBlock = toBlock
+		d.fromBlock = toBlock.Add(toBlock, new(big.Int).SetInt64(1))
 
 		// update from block into db
 		logger.Debug("update from block into db: ", d.fromBlock)
@@ -221,8 +221,11 @@ func (d *Dumper) unpack(log types.Log, ABI abi.ABI, out interface{}) error {
 
 // get did contract address from instance, and get endpoint
 func (d *Dumper) Init(env string) (err error) {
+	// set block number to 4000000, for test chain only
+	database.SetBlockNumber(6250000)
+
 	// init delta
-	d.delta = 100000
+	d.delta = 10000
 
 	// init map
 	d.eventNameMap = make(map[common.Hash]string)

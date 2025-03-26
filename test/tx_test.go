@@ -14,6 +14,18 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
+const (
+	privatekey = "9b4fc2a14cbc63a0d338377413ca72949cbb2fd5be1b08844b4b5e332597d91e"
+	sk1        = "cf9f8e55aaf30ab82d6daec06248cdfb1a761db68bc5ac30b230c4beaa48e3e4"
+	publickey  = "0x03ecc373891778bed36426ddcd682bf1e0b5a99a8d8534be05a000ddc4faaccea0"
+	address    = "0x47D4f617A654337AFB121F455629fF7d92b670eA"
+	address1   = "0x594CE7BA907710f5647C6ec58db168B0a2686de4"
+)
+
+func TestRegisterDID(t *testing.T) {
+
+}
+
 func TestBuyRead(t *testing.T) {
 	// 配置以太坊客户端（连接到测试网络或本地节点）
 	client, err := ethclient.Dial("https://testchain.metamemo.one:24180")
@@ -77,8 +89,8 @@ func TestBuyRead(t *testing.T) {
 	}
 
 	// 调用buyRead方法
-	mfileDid := "example_mfileDid"
-	memoDid := "example_memoDid"
+	mfileDid := "did:mfile:cid:bafybeicla35laadggrakpz37qlkrvfgobb7cxb74kyjn6556zxdu4gq3p4"
+	memoDid := "d7bcb9b1a68f41e5ee5d71fb71f075acd2bf2253e99d02f8ddb743278d0e3601"
 	tx, err := fileIns.BuyRead(opts, mfileDid, memoDid)
 	if err != nil {
 		t.Fatalf("Failed to send transaction: %v", err)
@@ -99,13 +111,5 @@ func TestBuyRead(t *testing.T) {
 }
 
 func TestGrantRead() {
-
-}
-
-func TestRegisterDID() {
-
-}
-
-func TestCreateDID() {
 
 }

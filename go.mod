@@ -5,7 +5,7 @@ go 1.23.0
 toolchain go1.23.7
 
 replace (
-	did-solidity => ../did-solidity
+	did-solidity => ../../did-solidity
 	github.com/memoio/contractsv2 => ../../memov2-contractsv2
 )
 
