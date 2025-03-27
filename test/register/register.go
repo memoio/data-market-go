@@ -64,6 +64,7 @@ func main() {
 	// get instance address and endpoint with chain
 	instanceAddr, eth = com.GetInsEndPointByChain(*chain)
 	hexSk = *sk
+	fmt.Println("instance address: ", instanceAddr)
 
 	// tx sk is a must
 	if len(hexSk) == 0 {
@@ -94,6 +95,15 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// check controlFileDid address
+	cfDidAddr, _ := instanceIns.Instances(&bind.CallOpts{From: com.AdminAddr}, com.TypeFileDidControl)
+	fmt.Println("controlFileDid address:", cfDidAddr.Hex())
+
+	// check FileDid address
+	fDidAddr, _ := instanceIns.Instances(&bind.CallOpts{From: com.AdminAddr}, com.TypeFileDid)
+	fmt.Println("FileDid address:", fDidAddr.Hex())
+
 	// get proxy address
 	proxyAddr, _ := instanceIns.Instances(&bind.CallOpts{From: com.AdminAddr}, com.TypeDidProxy)
 	fmt.Println("proxy address:", proxyAddr.Hex())
@@ -106,7 +116,6 @@ func main() {
 
 	// sk and did, as the controller of this mfiledid
 	user_sk := "11f797550cd4d77d08fd160047f9d55c8f468260c87e53a1f74505de4d9454be"
-	fmt.Println("sk: ", user_sk)
 	did := "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f18"
 	fmt.Println("did: ", did)
 
@@ -145,13 +154,30 @@ func main() {
 	var typeBuf = make([]byte, 8)
 	binary.BigEndian.PutUint64(typeBuf, 0)
 
-	price := new(big.Int).SetInt64(123)
+	// price
+	price := new(big.Int).SetInt64(3)
+	// 目标字节数组（32字节）
+	priceBuf := make([]byte, 32)
+	// 使用 FillBytes 填充（大端序）
+	price.FillBytes(priceBuf)
+	fmt.Printf("Price Bytes: %x\n", priceBuf) // 输出 32 字节的 16 进制表示
+	fmt.Println("buf len: ", len(priceBuf))
 
 	// make msg for sign
-	message := string("registerMfileDid") + fdid + encode + string(typeBuf) + did + string(price.Bytes()) + string(nonceBuf)
+	message := string("registerMfileDid") + fdid + encode + string(typeBuf[0]) + did + string(priceBuf) + string(nonceBuf)
+	// append keywords into message
+	for _, v := range keywords {
+		message += v
+	}
+	fmt.Println("message: ", message)
+
+	// add ethereum prefix to message
+	message = fmt.Sprintf("\x19Ethereum Signed Message:\n%d%s", len(message), message)
+	fmt.Println("prefixed message: ", message)
+	fmt.Printf("prefixed message bytes: %x\n", []byte(message))
 
 	// ethereum hash with message
-	hash := crypto.Keccak256([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d%s", len(message), message)))
+	hash := crypto.Keccak256([]byte(message))
 	fmt.Println("hash:", hex.EncodeToString(hash))
 
 	// sign
