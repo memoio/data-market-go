@@ -49,7 +49,7 @@ var (
 	did     = "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f20"
 
 	// file did
-	fdid        = "bafkreibkkylda7ub52hkpl4ulbysvazjm2mcs2zjbjvfvy4hdaa2qnk4ne"
+	fdid        = "did:mfile:mid:bafkreih6n5g5w4y6u7uvc4mh7jhjm7gidmkrbbpi7phyiyg54gplvngcpm"
 	encode      = "mid"
 	ftype       = uint8(0)        // 0:private; 1:public
 	price       = big.NewInt(100) // attomemo
@@ -165,7 +165,7 @@ func main() {
 
 	// nonce
 	var nonceBuf = make([]byte, 8)
-	binary.BigEndian.PutUint64(nonceBuf, 3)
+	binary.BigEndian.PutUint64(nonceBuf, 4)
 
 	// sign in controlFileDid
 	// bytes memory data = abi.encodePacked(
