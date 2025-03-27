@@ -91,35 +91,45 @@ func main() {
 	}
 
 	// str to ecdsa
-	userSk, err := crypto.HexToECDSA(*sk1)
+	ecdsaSk, err := crypto.HexToECDSA(*sk1)
 	if err != nil {
-		userSk, err = crypto.GenerateKey()
+		// a random sk for wrong input
+		ecdsaSk, err = crypto.GenerateKey()
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
-	log.Println("user sk:", userSk)
+	privateKeyBytes := ecdsaSk.D.Bytes() // D 是私钥的 big.Int 值
+	fmt.Println("user sk:", hex.EncodeToString(privateKeyBytes))
 
 	// pubkey to address
-	b_user_addr := crypto.PubkeyToAddress(userSk.PublicKey).Bytes()
+	b_user_addr := crypto.PubkeyToAddress(ecdsaSk.PublicKey).Bytes()
+
 	methodType := "EcdsaSecp256k1RecoveryMethod2020"
 	// publicKeyData := crypto.CompressPubkey(&userSk.PublicKey)
 	// methodType := "EcdsaSecp256k1VerificationKey2019"
+
 	// did := hex.EncodeToString(crypto.Keccak256(publicKeyData))
-	did := "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f15"
+	did := "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f19"
+	fmt.Println("did: ", did)
+
+	// nonce
 	var nonceBuf = make([]byte, 8)
 	binary.BigEndian.PutUint64(nonceBuf, 0)
 
 	// make msg for sign
 	message := string("createDID") + did + methodType + string(b_user_addr) + string(nonceBuf)
+
+	// ethereum hash with message
 	hash := crypto.Keccak256([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d%s", len(message), message)))
+
 	// sign
-	signature, err := crypto.Sign(hash, userSk)
+	signature, err := crypto.Sign(hash, ecdsaSk)
 	if err != nil {
 		log.Println(err)
 	}
-	fmt.Println("hash:", hash)
-	fmt.Println("user addr:", crypto.PubkeyToAddress(userSk.PublicKey))
+	fmt.Println("hash:", hex.EncodeToString(hash))
+	fmt.Println("user addr:", crypto.PubkeyToAddress(ecdsaSk.PublicKey))
 	fmt.Println("msg:", message)
 	fmt.Println("signature:", hex.EncodeToString(signature))
 
@@ -142,13 +152,6 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Println("did number:", num)
-}
 
-func reverse(s []byte) []byte {
-
-	newS := make([]byte, len(s))
-	for i, j := 0, len(s)-1; i <= j; i, j = i+1, j-1 {
-		newS[i], newS[j] = s[j], s[i]
-	}
-	return newS
+	fmt.Println("create did ok")
 }
