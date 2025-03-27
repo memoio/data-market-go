@@ -38,6 +38,7 @@ var (
 
 //go run create_did.go -eth=test -sk=0a95533a110ee10bdaa902fed92e56f3f7709a532e22b5974c03c0251648a5d4 -sk1=9b4fc2a14cbc63a0d338377413ca72949cbb2fd5be1b08844b4b5e332597d91e
 //go run create_did.go -eth=test -sk=0a95533a110ee10bdaa902fed92e56f3f7709a532e22b5974c03c0251648a5d4
+//go run create_did.go -eth=dev -sk=0a95533a110ee10bdaa902fed92e56f3f7709a532e22b5974c03c0251648a5d4
 
 func main() {
 	chain := flag.String("eth", "test", "eth api Address;") //dev test or product
@@ -110,7 +111,7 @@ func main() {
 	// methodType := "EcdsaSecp256k1VerificationKey2019"
 
 	// did := hex.EncodeToString(crypto.Keccak256(publicKeyData))
-	did := "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f19"
+	did := "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f20"
 	fmt.Println("did: ", did)
 
 	// nonce

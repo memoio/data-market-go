@@ -226,8 +226,8 @@ func (d *Dumper) Init(env string) (err error) {
 	if err != nil {
 		blockNumber = 0
 	}
-	if blockNumber < 6250000 {
-		database.SetBlockNumber(6250000)
+	if blockNumber < 8000000 {
+		database.SetBlockNumber(8000000)
 	}
 
 	// init delta

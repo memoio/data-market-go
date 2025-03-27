@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+	"time"
 
+	cfdid "did-solidity/go-contracts/controlfiledid"
 	"did-solidity/go-contracts/proxy"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -20,11 +22,10 @@ import (
 )
 
 var (
-	eth      string
-	hexSk    string
-	sks      [5]string
-	as       [5]common.Address
-	endPoint string
+	eth   string
+	hexSk string
+	sks   [5]string
+	as    [5]common.Address
 
 	hash  []byte
 	signs [5][]byte
@@ -39,7 +40,16 @@ var (
 
 	methodType = "EcdsaSecp256k1VerificationKey2019"
 
-	fdid        = "bafkreibkkylda7ub52hkpl4ulbysvazjm2mcs2zjbjvfvy4hdaa2qnk4na"
+	// user sk and did, as the controller of this mfiledid
+	// test chain
+	// user_sk = "11f797550cd4d77d08fd160047f9d55c8f468260c87e53a1f74505de4d9454be"
+	// did     = "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f18"
+	// dev chain
+	user_sk = "9db5e51e62c438bc32e0137bab95d73892d057faeea15d9868eb71c983945a80"
+	did     = "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f20"
+
+	// file did
+	fdid        = "bafkreibkkylda7ub52hkpl4ulbysvazjm2mcs2zjbjvfvy4hdaa2qnk4ne"
 	encode      = "mid"
 	ftype       = uint8(0)        // 0:private; 1:public
 	price       = big.NewInt(100) // attomemo
@@ -52,6 +62,7 @@ var (
 )
 
 //go run register.go -eth=test -sk=0a95533a110ee10bdaa902fed92e56f3f7709a532e22b5974c03c0251648a5d4
+//go run register.go -eth=dev -sk=0a95533a110ee10bdaa902fed92e56f3f7709a532e22b5974c03c0251648a5d4
 
 func main() {
 	chain := flag.String("eth", "test", "eth api Address;") //dev test or product
@@ -99,6 +110,19 @@ func main() {
 	// check controlFileDid address
 	cfDidAddr, _ := instanceIns.Instances(&bind.CallOpts{From: com.AdminAddr}, com.TypeFileDidControl)
 	fmt.Println("controlFileDid address:", cfDidAddr.Hex())
+	cfdidIns, err := cfdid.NewControlFileDid(cfDidAddr, client)
+	if err != nil {
+		log.Fatal(err)
+	}
+	_ = cfdidIns
+	var n uint64
+	// fmt.Println("call cfdid.GetNonce")
+	// // get nonce with did
+	// n, err := cfdidIns.GetNonce(&bind.CallOpts{}, did)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// fmt.Println("nonce of did: ", n)
 
 	// check FileDid address
 	fDidAddr, _ := instanceIns.Instances(&bind.CallOpts{From: com.AdminAddr}, com.TypeFileDid)
@@ -114,10 +138,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// sk and did, as the controller of this mfiledid
-	user_sk := "11f797550cd4d77d08fd160047f9d55c8f468260c87e53a1f74505de4d9454be"
-	did := "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f18"
-	fmt.Println("did: ", did)
+	fmt.Println("call proxy.GetFileDidNonce")
+	// test call proxy.getNonce
+	n, err = proxyIns.GetFileDidNonce(&bind.CallOpts{}, did)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("nonce: ", n)
 
 	// str to ecdsa
 	ecdsaSk, err := crypto.HexToECDSA(user_sk)
@@ -131,13 +158,14 @@ func main() {
 	privateKeyBytes := ecdsaSk.D.Bytes() // D 是私钥的 big.Int 值
 	fmt.Println("user sk:", hex.EncodeToString(privateKeyBytes))
 	fmt.Println("user addr:", crypto.PubkeyToAddress(ecdsaSk.PublicKey))
+	fmt.Println("did: ", did)
 
 	//
 	fmt.Println("fdid: ", fdid)
 
 	// nonce
 	var nonceBuf = make([]byte, 8)
-	binary.BigEndian.PutUint64(nonceBuf, 0)
+	binary.BigEndian.PutUint64(nonceBuf, 3)
 
 	// sign in controlFileDid
 	// bytes memory data = abi.encodePacked(
@@ -170,6 +198,7 @@ func main() {
 		message += v
 	}
 	fmt.Println("message: ", message)
+	fmt.Printf("unprefixed message bytes: %x\n", []byte(message))
 
 	// add ethereum prefix to message
 	message = fmt.Sprintf("\x19Ethereum Signed Message:\n%d%s", len(message), message)
@@ -194,15 +223,23 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	go com.PrintGasUsed(endPoint, tx.Hash(), "admin register file did gas:", &allGas)
-	err = com.CheckTx(endPoint, tx.Hash(), "admin register file did")
+	_ = tx
+
+	fmt.Println("get gas used")
+	go com.PrintGasUsed(eth, tx.Hash(), "admin register file did gas:", &allGas)
+	fmt.Println("check tx")
+	fmt.Println("endpoint: ", eth)
+	err = com.CheckTx(eth, tx.Hash(), "admin register file did")
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println()
+
+	fmt.Println("waiting tx")
+	time.Sleep(time.Second * 10)
 
 	// get encode,ftype,controller,price,keywords,deactivated,read
 	// encode
+	fmt.Println("get encode")
 	mfileEncode, err := proxyIns.GetEncode(&bind.CallOpts{From: com.AdminAddr}, fdid)
 	if err != nil {
 		log.Fatal(err)
