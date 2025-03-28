@@ -23,6 +23,8 @@ var (
 	l     = "1000000000000000000000000000000014def9dea2f79cd65812631a5cf5d3ed"
 	lBase = "14def9dea2f79cd65812631a5cf5d3ed"
 
+	allGas = make([]uint64, 0)
+
 	// // AdminAddr admin address
 	// AdminAddr = common.HexToAddress("0x1c111472F298E4119150850c198C657DA1F8a368")
 
@@ -135,7 +137,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	//go com.PrintGasUsed(eth, tx.Hash(), "transfer memo gas:", nil)
+	go com.PrintGasUsed(eth, tx.Hash(), "transfer memo gas:", &allGas)
 	err = com.CheckTx(eth, tx.Hash(), "admin transfer memo to user")
 	if err != nil {
 		log.Fatal(err)
@@ -154,7 +156,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	//go com.PrintGasUsed(eth, tx.Hash(), "user approve ControlFileDid gas:", &allGas)
+	go com.PrintGasUsed(eth, tx.Hash(), "user approve ControlFileDid gas:", &allGas)
 	err = com.CheckTx(eth, tx.Hash(), "user approve ControlFileDid")
 	if err != nil {
 		log.Fatal(err)
@@ -174,8 +176,9 @@ func main() {
 
 	// check read status about this filedid and did
 	r, err := proxyIns.Read(&bind.CallOpts{}, fdid, did)
+	fmt.Println("read status: ", r)
 	if r != 1 {
-		log.Fatal("read status must be 1")
+		log.Fatal("read status must be 1 for buy read")
 	}
 
 	fmt.Println("buy read ok")

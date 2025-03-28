@@ -113,7 +113,7 @@ func main() {
 	// methodType := "EcdsaSecp256k1VerificationKey2019"
 
 	// did := hex.EncodeToString(crypto.Keccak256(publicKeyData))
-	did := "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f20"
+	did := "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f22"
 	fmt.Println("did: ", did)
 
 	// nonce

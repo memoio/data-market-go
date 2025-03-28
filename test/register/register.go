@@ -305,42 +305,37 @@ func main() {
 	fmt.Println()
 }
 
-// make hash
-func makeHash() []byte {
-	// 假设输入数据（替换为实际值）
-	ftype := uint8(1) // enum 在 Solidity 中默认是 uint8
-	controller := "exampleController"
-	price := big.NewInt(1000000000000000000) // 1 ETH in wei (uint256)
-	nonce := uint64(0)                       // uint64
+// go run register.go -eth=dev -sk=0a95533a110ee10bdaa902fed92e56f3f7709a532e22b5974c03c0251648a5d4
+// instance address:  0x10790c26fB42AaDB87c10b91a25090AF1Ff5352E
 
-	// 1. 将各字段按 abi.encodePacked 规则转换为字节
-	var msgBytes []byte
-
-	// 字符串类型：直接拼接字节
-	msgBytes = append(msgBytes, []byte(fdid)...)
-	msgBytes = append(msgBytes, []byte(encode)...)
-
-	// enum (视为 uint8): 1字节
-	msgBytes = append(msgBytes, byte(ftype))
-
-	// 字符串类型：直接拼接字节
-	msgBytes = append(msgBytes, []byte(controller)...)
-
-	// uint256: 32字节小端序，高位补零
-	priceBytes := make([]byte, 32)
-	price.FillBytes(priceBytes) // 大端序转字节
-	msgBytes = append(msgBytes, priceBytes...)
-
-	// uint64: 8字节小端序
-	nonceBytes := make([]byte, 8)
-	binary.BigEndian.PutUint64(nonceBytes, nonce)
-	msgBytes = append(msgBytes, nonceBytes...)
-
-	// message := string("registerMfileDid") + fdid + encode + string(typeBuf) + did + string(bPrice) + string(nonceBuf)
-	msg := fmt.Sprintf("\x19Ethereum Signed Message:\n%d%s", len(msgBytes), msgBytes)
-
-	// ethereum hash with message
-	hash := crypto.Keccak256([]byte(msg))
-
-	return hash
-}
+// controlFileDid address: 0x9dCf172c6179044be7dd5F7967231697dA131476
+// FileDid address: 0x7272d844d5d78E2F8Fb0780582739080C8DC0B5a
+// proxy address: 0xE2C89b43724ed4932626e937742347280A5dcb4D
+// call proxy.GetFileDidNonce
+// nonce:  3
+// user sk: 9db5e51e62c438bc32e0137bab95d73892d057faeea15d9868eb71c983945a80
+// user addr: 0x1E571f8a8Ad450A9453975B4207D40B25B16741b
+// did:  f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f20
+// fdid:  bafkreibkkylda7ub52hkpl4ulbysvazjm2mcs2zjbjvfvy4hdaa2qnk4ne
+// Price Bytes: 0000000000000000000000000000000000000000000000000000000000000003
+// buf len:  32
+// message:  registerMfileDidbafkreibkkylda7ub52hkpl4ulbysvazjm2mcs2zjbjvfvy4hdaa2qnk4nemidf3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f20pictureanimaldogwhitebig
+// unprefixed message bytes: 72656769737465724d66696c654469646261666b726569626b6b796c64613775623532686b706c34756c62797376617a6a6d326d6373327a6a626a76667679346864616132716e6b346e656d696400663330353339343664376663623735653338306638653431353164656431343536616265363764643736303731303166646439636331396330643162336632300000000000000000000000000000000000000000000000000000000000000003000000000000000370696374757265616e696d616c646f677768697465626967
+// prefixed message:  Ethereum Signed Message:
+// 207registerMfileDidbafkreibkkylda7ub52hkpl4ulbysvazjm2mcs2zjbjvfvy4hdaa2qnk4nemidf3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f20pictureanimaldogwhitebig
+// prefixed message bytes: 19457468657265756d205369676e6564204d6573736167653a0a32303772656769737465724d66696c654469646261666b726569626b6b796c64613775623532686b706c34756c62797376617a6a6d326d6373327a6a626a76667679346864616132716e6b346e656d696400663330353339343664376663623735653338306638653431353164656431343536616265363764643736303731303166646439636331396330643162336632300000000000000000000000000000000000000000000000000000000000000003000000000000000370696374757265616e696d616c646f677768697465626967
+// hash: 867a02a41ee9cadc3ebe45a92812de92a7747e101bcbd151181d5be544c80b0e
+// signature: cb403f12f22244fb649a6e7e588f5a2c24eca0c92202becb914817274fe03e3e2859c40e2fb26ee2ec4cd97e78ddc70e4eb426175ddbb8d7a4ff152d62b19b2b00
+// call proxy.RegisterMfileDid
+// get gas used
+// check tx
+// endpoint:
+// waiting tx
+// get encode
+// file encode: mid
+// file type: 0
+// file's controller: f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f20
+// file read permission price: 3
+// mfile keywords: [picture animal dog white big]
+// file did deactivated: false
+// has read permission: 0
