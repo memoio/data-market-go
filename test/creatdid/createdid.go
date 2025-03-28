@@ -52,6 +52,8 @@ func main() {
 	instanceAddr, eth = com.GetInsEndPointByChain(*chain)
 	hexSk = *sk
 
+	fmt.Println("instance address: ", instanceAddr)
+
 	// tx sk is a must
 	if len(hexSk) == 0 {
 		log.Fatal("please input sk")
