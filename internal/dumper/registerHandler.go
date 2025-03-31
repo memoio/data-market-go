@@ -36,15 +36,13 @@ func (d *Dumper) HandleRegisterFileDID(log types.Log) error {
 	// 获取当前时间
 	now := time.Now()
 
-	// todo:
-	// get etag from filedid
-	// get controller did with filedid
-	// get price with filedid
+	// get etag
 	etag, err := d.getEtagWithFileID(out.FileDID)
 	if err != nil {
 		return err
 	}
 
+	// get controller and price
 	controller, price, err := d.getControllerAndPrice(out.FileDID)
 	if err != nil {
 		return err

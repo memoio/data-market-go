@@ -170,19 +170,19 @@ func (d *Dumper) Dump(client *ethclient.Client) error {
 				logger.Debug("!!!! Handle RegisterMfileDid Event")
 				err = d.HandleRegisterFileDID(event)
 				if err != nil {
-					logger.Debug("handle buyread error: ", err.Error())
+					logger.Debug("handle RegisterMfileDid error: ", err.Error())
 				}
 			case "BuyRead":
 				logger.Debug("@@@@ Handle BuyRead Event")
 				err = d.HandleBuyRead(event)
 				if err != nil {
-					logger.Debug("handle buyread error: ", err.Error())
+					logger.Debug("handle BuyRead error: ", err.Error())
 				}
 			case "GrantRead":
-				logger.Debug("#### Handle BuyRead Event")
+				logger.Debug("#### Handle GrantRead Event")
 				err = d.HandleBuyRead(event)
 				if err != nil {
-					logger.Debug("handle buyread error: ", err.Error())
+					logger.Debug("handle GrantRead error: ", err.Error())
 				}
 
 			default:

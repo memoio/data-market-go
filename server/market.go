@@ -31,7 +31,7 @@ func (h *handler) getMarketAddressTransactionList(c *gin.Context) {
 	var records []TransactionRecord
 
 	// query db
-	err := h.db.Model(&database.FileMemo{}).
+	err := h.db.Model(&database.Access{}).
 		Select(`file_info.name AS file_name,
                 file_info.description,
                 file_info.price,

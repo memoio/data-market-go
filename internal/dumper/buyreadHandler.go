@@ -58,12 +58,12 @@ func (d *Dumper) HandleBuyRead(log types.Log) error {
 	}
 
 	// make object for db store
-	fileMemo := database.FileMemo{
+	fileMemo := database.Access{
 		FileDID:      out.FileDID,
 		MemoDID:      out.MemoDID,
 		UserAddress:  addressHex,
 		OwnerAddress: ownerAddr,
-		BuyTime:      buyTime,
+		AddTime:      buyTime,
 		AddType:      1, // 1 for buyRead, 2 for grantRead
 	}
 

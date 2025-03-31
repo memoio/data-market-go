@@ -70,7 +70,7 @@ func init() {
 		&File{},
 		&Download{},
 		&MemoDID{},
-		&FileMemo{},
+		&Access{},
 		&Collection{},
 	)
 	if err != nil {

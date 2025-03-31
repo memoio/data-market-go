@@ -165,7 +165,7 @@ func (h *handler) getAddressPurchasedList(c *gin.Context) {
 	}
 
 	// 第一步：从FileMemo表中查询该用户的所有文件ID
-	var fileMemos []database.FileMemo
+	var fileMemos []database.Access
 	if err := h.db.Where("user_address = ?", userAddress).Find(&fileMemos).Error; err != nil {
 		c.JSON(500, gin.H{"error": "failed to query file memos"})
 		return
