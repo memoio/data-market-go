@@ -77,7 +77,11 @@ var DaemonCmd = &cobra.Command{
 
 func init() {
 	// add flag info for run cmd
-	runCmd.Flags().StringVarP(&port, "port", "p", "8080", "listen port")
+	runCmd.Flags().StringVarP(&port,
+		"port",
+		"p",
+		"8080",
+		"listen port")
 
 	runCmd.Flags().StringVarP(
 		&env,

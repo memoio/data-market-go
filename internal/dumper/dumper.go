@@ -35,11 +35,14 @@ var (
 type Dumper struct {
 	// chain
 	endpoint string
+	// chainid
+	chainid *big.Int
 
 	// the instance contract address
 	instance_ADDR common.Address
 
 	// contract address
+	proxy_ADDR      common.Address
 	accountdid_ADDR common.Address
 	filedid_ADDR    common.Address
 
@@ -262,11 +265,24 @@ func (d *Dumper) Init(env string) (err error) {
 		return err
 	}
 
+	// get chain id
+	d.chainid, err = client.ChainID(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	// get instance
 	instIns, err := inst.NewInstance(instAddr, client)
 	if err != nil {
 		return err
 	}
+
+	// get proxy address
+	d.proxy_ADDR, err = instIns.Instances(&bind.CallOpts{}, com.TypeDidProxy)
+	if err != nil {
+		return err
+	}
+	logger.Debug("proxy addr:", d.proxy_ADDR)
 
 	// get accountdid address
 	d.accountdid_ADDR, err = instIns.Instances(&bind.CallOpts{}, 30)
