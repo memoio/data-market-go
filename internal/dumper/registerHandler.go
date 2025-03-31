@@ -30,14 +30,14 @@ func (d *Dumper) HandleRegisterFileDID(log types.Log) error {
 
 	// todo:
 	// get etag from filedid
-	// controller did with filedid
+	// get controller did with filedid
 	// get price with filedid
 
 	// 更新操作
 	result := database.G_DB.Model(&database.File{}).
-		Where("e_tag = ?", "eTag"). // 指定ETag条件
+		Where("e_tag = ?", "bafkreih6n5g5w4y6u7uvc4mh7jhjm7gidmkrbbpi7phyiyg54gplvngcpm"). // 指定ETag条件
 		Updates(database.File{
-			FileDID:       "newFileDID",
+			FileDID:       out.FileDID,
 			ControllerDID: "newControllerDID",
 			PublishState:  1,    // 设置为已上架
 			PublishTime:   &now, // 设置为当前时间

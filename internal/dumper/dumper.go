@@ -158,19 +158,25 @@ func (d *Dumper) Dump(client *ethclient.Client) error {
 			// handle each event log
 			switch eventName {
 			case "CreateDID":
-				logger.Debug("==== Handle CreateDID Event")
+				logger.Debug("~~~~ Handle CreateDID Event")
 				err = d.HandleCreateDID(event)
 				if err != nil {
 					logger.Debug("handle createdid error: ", err.Error())
 				}
 			case "RegisterMfileDid":
-				logger.Debug("==== Handle RegisterMfileDid Event")
+				logger.Debug("!!!! Handle RegisterMfileDid Event")
 				err = d.HandleRegisterFileDID(event)
 				if err != nil {
 					logger.Debug("handle buyread error: ", err.Error())
 				}
 			case "BuyRead":
-				logger.Debug("==== Handle BuyRead Event")
+				logger.Debug("@@@@ Handle BuyRead Event")
+				err = d.HandleBuyRead(event)
+				if err != nil {
+					logger.Debug("handle buyread error: ", err.Error())
+				}
+			case "GrantRead":
+				logger.Debug("#### Handle BuyRead Event")
 				err = d.HandleBuyRead(event)
 				if err != nil {
 					logger.Debug("handle buyread error: ", err.Error())
