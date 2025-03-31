@@ -7,6 +7,8 @@ import (
 
 	"github.com/data-market/internal/database"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
@@ -18,32 +20,39 @@ import (
 )
 
 type BuyReadEvent struct {
-	FileDID string
-	MemoDID string
+	MfileDid common.Hash `json:"mfileDid"`
+	MemoDid  string      `json:"memoDid"`
 }
 
 // unpack log data and store into db
 func (d *Dumper) HandleBuyRead(log types.Log) error {
 	var out BuyReadEvent
 
+	logger.Debug("unpacking buyread log")
+
+	logger.Debug("log: ", log)
+
 	// unpack createdid
-	err := d.unpack(log, d.filedid_ABI, &out)
+	err := d.unpack(log, d.iFiledid_ABI, &out)
 	if err != nil {
 		return err
 	}
 
-	logger.Debug("memodid:", out.MemoDID)
-	logger.Debug("filedid:", out.FileDID)
+	// hash to bytes to string
+	fileDid := hexutil.Encode(out.MfileDid.Bytes())
+
+	logger.Debug("memodid:", out.MemoDid)
+	logger.Debug("filedid:", fileDid)
 
 	// get the owner address with filedid
-	ownerAddr, err := d.getOwner(out.FileDID)
+	ownerAddr, err := d.getOwner(fileDid)
 	if err != nil {
 		logger.Debug("get owner address with filedid failed: ", err)
 		return err
 	}
 
 	// get the buyer address
-	addressHex, err := d.getAddrWithDID(out.MemoDID)
+	addressHex, err := d.getAddrWithDID(out.MemoDid)
 	if err != nil {
 		logger.Debug("get address with memodid failed: ", err)
 		return err
@@ -59,8 +68,8 @@ func (d *Dumper) HandleBuyRead(log types.Log) error {
 
 	// make object for db store
 	fileMemo := database.Access{
-		FileDID:      out.FileDID,
-		MemoDID:      out.MemoDID,
+		FileDID:      fileDid,
+		MemoDID:      out.MemoDid,
 		UserAddress:  addressHex,
 		OwnerAddress: ownerAddr,
 		AddTime:      buyTime,

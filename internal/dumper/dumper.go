@@ -10,7 +10,7 @@ import (
 
 	"github.com/data-market/internal/database"
 	"github.com/data-market/internal/go-contracts/accountdid"
-	"github.com/data-market/internal/go-contracts/filedid"
+	"github.com/data-market/internal/go-contracts/ifiledid"
 	"github.com/data-market/internal/logs"
 
 	"github.com/ethereum/go-ethereum"
@@ -29,7 +29,7 @@ var (
 	logger = logs.Logger("dumper")
 
 	AccountDID_ABI = accountdid.AccountdidABI
-	FileDID_ABI    = filedid.FiledidABI
+	IFileDID_ABI   = ifiledid.IfiledidABI
 )
 
 type Dumper struct {
@@ -48,7 +48,7 @@ type Dumper struct {
 
 	// contract abi
 	accountdid_ABI abi.ABI
-	filedid_ABI    abi.ABI
+	iFiledid_ABI   abi.ABI
 
 	fromBlock *big.Int
 
@@ -305,13 +305,13 @@ func (d *Dumper) Init(env string) (err error) {
 	}
 
 	// set filedid abi
-	d.filedid_ABI, err = abi.JSON(strings.NewReader(FileDID_ABI))
+	d.iFiledid_ABI, err = abi.JSON(strings.NewReader(IFileDID_ABI))
 	if err != nil {
 		return err
 	}
 
 	// group all abi together
-	ABIs := []abi.ABI{d.accountdid_ABI, d.filedid_ABI}
+	ABIs := []abi.ABI{d.accountdid_ABI, d.iFiledid_ABI}
 
 	// parse all abi for event and topic
 	logger.Debug("parse event and topics in all abi")

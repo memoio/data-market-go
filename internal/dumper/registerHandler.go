@@ -25,7 +25,7 @@ func (d *Dumper) HandleRegisterFileDID(log types.Log) error {
 	var out RegisterFileDIDEvent
 
 	// unpack
-	err := d.unpack(log, d.filedid_ABI, &out)
+	err := d.unpack(log, d.iFiledid_ABI, &out)
 	if err != nil {
 		return err
 	}
