@@ -94,8 +94,38 @@ func init() {
 		nil, // Price设为NULL
 		1048576,
 		"bafkreih6n5g5w4y6u7uvc4mh7jhjm7gidmkrbbpi7phyiyg54gplvngcpm",
-		"did:mfile:mid:bafkreih6n5g5w4y6u7uvc4mh7jhjm7gidmkrbbpi7phyiyg54gplvngcpm",
-		"0x53268dc74973e787e3926c6c551ffd6621e9f0eaca199db8c75afdc3cb86837c",
+		"bafkreih6n5g5w4y6u7uvc4mh7jhjm7gidmkrbbpi7phyiyg54gplvngcpm",
+		"0x907f3fa86ec2186091a1b80ab74065d5022242b56f9c98db7cfd2b452eabad53",
+		nil, // ControllerDID设为NULL
+		0,
+		nil,
+		"document_education",
+		"document",
+	)
+
+	if result.Error != nil {
+		panic(result.Error)
+	}
+
+	// 第二条文件记录
+	result = db.Exec(`
+    INSERT INTO file_info (
+        name, description, file_type, category, owner_address, 
+        upload_time, price, file_size, e_tag, file_did, 
+        file_did_topic, controller_did, publish_state, publish_time, 
+        index_file_type_category, index_file_type
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		"sample_document.pdf",
+		"This is a sample document for demonstration",
+		"document",
+		"education",
+		"0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
+		time.Now(),
+		nil, // Price设为NULL
+		1048576,
+		"bafkreih6n5g5w4y6u7uvc4mh7jhjm7gidmkrbbpi7phyiyg54gplvngcpn",
+		"bafkreih6n5g5w4y6u7uvc4mh7jhjm7gidmkrbbpi7phyiyg54gplvngcpn",
+		"0xd478b2aec3d04e7357d48ec5088170b45b3120ad252a8eb3c76720259e52ced9",
 		nil, // ControllerDID设为NULL
 		0,
 		nil,

@@ -24,39 +24,40 @@ import (
 var (
 	eth   string
 	hexSk string
-	sks   [5]string
-	as    [5]common.Address
 
-	hash  []byte
-	signs [5][]byte
+	// sks   [5]string
+	// as    [5]common.Address
 
-	txfee = big.NewInt(1e12)
+	// hash  []byte
+	// signs [5][]byte
 
-	bigone       = big.NewInt(1)
-	defaultNonce = big.NewInt(0)
-	set          = true
+	// txfee = big.NewInt(1e12)
+
+	// bigone       = big.NewInt(1)
+	// defaultNonce = big.NewInt(0)
+	// set          = true
 
 	allGas = make([]uint64, 0)
 
-	methodType = "EcdsaSecp256k1VerificationKey2019"
+	// methodType = "EcdsaSecp256k1VerificationKey2019"
 
 	// user sk and did, as the controller of this mfiledid
 	// test chain
 	// user_sk = "11f797550cd4d77d08fd160047f9d55c8f468260c87e53a1f74505de4d9454be"
 	// did     = "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f18"
 	// dev chain
-	user_sk = "9db5e51e62c438bc32e0137bab95d73892d057faeea15d9868eb71c983945a80"
-	did     = "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f20"
+	user_sk = "7ad6e373d75363a20a7851a00aa6204c52e70b26f5499c0ba32a119058d4afdd"
+	did     = "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f81"
 
 	// file did
-	fdid        = "did:mfile:mid:bafkreih6n5g5w4y6u7uvc4mh7jhjm7gidmkrbbpi7phyiyg54gplvngcpm"
-	encode      = "mid"
-	ftype       = uint8(0)        // 0:private; 1:public
-	price       = big.NewInt(100) // attomemo
-	keywords    = []string{"picture", "animal", "dog", "white", "big"}
-	newPrice    = big.NewInt(200)
-	newFtype    = uint8(1)
-	newKeywords = []string{"picture", "animal", "dog", "white", "big", "smile"}
+	fdid   = "bafkreih6n5g5w4y6u7uvc4mh7jhjm7gidmkrbbpi7phyiyg54gplvngcpn"
+	encode = "mid"
+	ftype  = uint8(0) // 0:private; 1:public
+	// price       = big.NewInt(100) // attomemo
+	keywords = []string{"sport", "basketball"}
+	// newPrice    = big.NewInt(200)
+	// newFtype    = uint8(1)
+	// newKeywords = []string{"picture", "animal", "dog", "white", "big", "smile"}
 
 	instanceAddr common.Address
 )
@@ -165,7 +166,7 @@ func main() {
 
 	// nonce
 	var nonceBuf = make([]byte, 8)
-	binary.BigEndian.PutUint64(nonceBuf, 4)
+	binary.BigEndian.PutUint64(nonceBuf, 0)
 
 	// sign in controlFileDid
 	// bytes memory data = abi.encodePacked(
@@ -302,7 +303,8 @@ func main() {
 	if mfileRead != 0 {
 		log.Fatal("should not has read permission")
 	}
-	fmt.Println()
+
+	fmt.Println("register filedid ok")
 }
 
 // go run register.go -eth=dev -sk=0a95533a110ee10bdaa902fed92e56f3f7709a532e22b5974c03c0251648a5d4

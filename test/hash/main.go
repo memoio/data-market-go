@@ -19,11 +19,9 @@ func main() {
 	fmt.Println("Uint256 topic:", topic)
 
 	// 示例：生成一个string类型indexed参数的topic hash
-	str := "did:mfile:mid:bafkreih6n5g5w4y6u7uvc4mh7jhjm7gidmkrbbpi7phyiyg54gplvngcpm"
+	str := "bafkreih6n5g5w4y6u7uvc4mh7jhjm7gidmkrbbpi7phyiyg54gplvngcpn"
 	topic = crypto.Keccak256Hash([]byte(str)).Hex()
 	fmt.Println("String topic:", topic)
-	logHash := "0x53268dc74973e787e3926c6c551ffd6621e9f0eaca199db8c75afdc3cb86837c"
-	fmt.Println("log hash:", logHash)
 }
 
 // 对于uint256类型，需要转换为32字节的大端表示

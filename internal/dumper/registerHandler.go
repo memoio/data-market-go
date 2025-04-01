@@ -3,10 +3,8 @@ package dumper
 import (
 	"context"
 	"did-solidity/go-contracts/proxy"
-	"fmt"
 	"log"
 	"math/big"
-	"strings"
 	"time"
 
 	"github.com/data-market/internal/database"
@@ -36,21 +34,17 @@ func (d *Dumper) HandleRegisterFileDID(log types.Log) error {
 	// 获取当前时间
 	now := time.Now()
 
-	// get etag
-	etag, err := d.getEtagWithFileID(out.FileDID)
-	if err != nil {
-		return err
-	}
-
 	// get controller and price
 	controller, price, err := d.getControllerAndPrice(out.FileDID)
 	if err != nil {
 		return err
 	}
 
+	logger.Debug("controller:", controller)
+
 	// update file info, locate the file with etag
 	result := database.G_DB.Model(&database.File{}).
-		Where("e_tag = ?", etag).
+		Where("e_tag = ?", out.FileDID). // filedid is the same as the etag of this file
 		Updates(database.File{
 			FileDID:       out.FileDID,
 			ControllerDID: controller,
@@ -69,21 +63,6 @@ func (d *Dumper) HandleRegisterFileDID(log types.Log) error {
 	}
 
 	return nil
-}
-
-// get etag with file id
-func (d *Dumper) getEtagWithFileID(fid string) (string, error) {
-	// 找到最后一个冒号的位置
-	lastIndex := strings.LastIndex(fid, ":")
-	if lastIndex == -1 {
-		return "", fmt.Errorf("no colon in file id")
-	}
-
-	// 提取最后一部分
-	result := fid[lastIndex+1:]
-
-	return result, nil
-
 }
 
 // get controller and price with file did
@@ -116,3 +95,30 @@ func (d *Dumper) getControllerAndPrice(fid string) (string, *big.Int, error) {
 
 	return controller, price, nil
 }
+
+// // get owner of this controller
+// func (d *Dumper) getOnwer(controller string) (string, error) {
+
+// 	eth := d.endpoint
+// 	proxyAddr := d.proxy_ADDR
+
+// 	// connect endpoint
+// 	client, err := ethclient.DialContext(context.Background(), eth)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+
+// 	// get proxy instance
+// 	proxyIns, err := proxy.NewProxy(proxyAddr, client)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+
+// 	// get owner address from proxy
+// 	owner, err := proxyIns.GetMasterKeyAddr(&bind.CallOpts{}, controller)
+// 	if err != nil {
+// 		return "", err
+// 	}
+
+// 	return owner.String(), nil
+// }

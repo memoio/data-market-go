@@ -113,7 +113,7 @@ func main() {
 	// methodType := "EcdsaSecp256k1VerificationKey2019"
 
 	// did := hex.EncodeToString(crypto.Keccak256(publicKeyData))
-	did := "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f22"
+	did := "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f81"
 	fmt.Println("did: ", did)
 
 	// nonce
@@ -126,7 +126,7 @@ func main() {
 	// ethereum hash with message
 	hash := crypto.Keccak256([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d%s", len(message), message)))
 
-	// sign
+	// user sign
 	signature, err := crypto.Sign(hash, ecdsaSk)
 	if err != nil {
 		log.Println(err)

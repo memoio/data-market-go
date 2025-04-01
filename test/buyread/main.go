@@ -94,13 +94,13 @@ func main() {
 	fmt.Println("controlFileDidAddr :", controlFileDidAddr.Hex())
 
 	// file did
-	fdid := "did:mfile:mid:bafkreih6n5g5w4y6u7uvc4mh7jhjm7gidmkrbbpi7phyiyg54gplvngcpm"
+	fdid := "bafkreih6n5g5w4y6u7uvc4mh7jhjm7gidmkrbbpi7phyiyg54gplvngcpm"
 	fmt.Println("file did: ", fdid)
 
 	// user sk and did
 	user_sk := "9db5e51e62c438bc32e0137bab95d73892d057faeea15d9868eb71c983945a80"
 	user_addr := "0x1E571f8a8Ad450A9453975B4207D40B25B16741b"
-	memodid := "did:memo:f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f20"
+	memodid := "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f80"
 	fmt.Println("user sk: ", user_sk)
 	fmt.Println("user address: ", user_addr)
 	fmt.Println("memodid: ", memodid)
