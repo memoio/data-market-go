@@ -30,7 +30,7 @@ func (d *Dumper) HandleBuyRead(log types.Log) error {
 	var out BuyReadEvent
 
 	// unpack createdid
-	err := d.unpack(log, d.iFiledid_ABI, &out)
+	err := d.unpack(log, d.filedid_ABI, &out)
 	if err != nil {
 		return err
 	}
@@ -127,7 +127,7 @@ func (d *Dumper) getOwner(filedid string) (string, error) {
 	return owner, nil
 }
 
-// get the buy time(buyRead onchain)
+// get the buy time with block number(buyRead onchain)
 func (d *Dumper) getBuyTime(num uint64) (time.Time, error) {
 	// 创建 RPC 客户端
 	rpcClient, err := rpc.DialContext(context.Background(), d.endpoint)
@@ -151,7 +151,7 @@ func (d *Dumper) getBuyTime(num uint64) (time.Time, error) {
 	return timestamp, nil
 }
 
-// 封装为函数
+// query filedid from db with topic
 func (d *Dumper) GetFileDIDByTopic(topic string) (string, error) {
 	var fileDID string
 
