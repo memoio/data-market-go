@@ -2,6 +2,7 @@ package dumper
 
 import (
 	"context"
+	"fmt"
 	"math/big"
 	"time"
 
@@ -28,10 +29,6 @@ type BuyReadEvent struct {
 func (d *Dumper) HandleBuyRead(log types.Log) error {
 	var out BuyReadEvent
 
-	logger.Debug("unpacking buyread log")
-
-	logger.Debug("log: ", log)
-
 	// unpack createdid
 	err := d.unpack(log, d.iFiledid_ABI, &out)
 	if err != nil {
@@ -39,9 +36,18 @@ func (d *Dumper) HandleBuyRead(log types.Log) error {
 	}
 
 	// hash to bytes to string
-	fileDid := hexutil.Encode(out.MfileDid.Bytes())
+	fileDidTopic := hexutil.Encode(out.MfileDid.Bytes())
 
 	logger.Debug("memodid:", out.MemoDid)
+	logger.Debug("filedid topic:", fileDidTopic)
+
+	logger.Debug("query filedid with topic")
+	// todo: get filedid from file table with filedidTopic
+	fileDid, err := d.GetFileDIDByTopic(fileDidTopic)
+	if err != nil {
+		return err
+	}
+
 	logger.Debug("filedid:", fileDid)
 
 	// get the owner address with filedid
@@ -143,4 +149,21 @@ func (d *Dumper) getBuyTime(num uint64) (time.Time, error) {
 	//buyTime := fmt.Sprintf("Buy Time (UTC): %s\n", timestamp.Format(time.RFC3339))
 
 	return timestamp, nil
+}
+
+// 封装为函数
+func (d *Dumper) GetFileDIDByTopic(topic string) (string, error) {
+	var fileDID string
+
+	// query filedid
+	err := d.db.Model(&database.File{}).
+		Where("file_did_topic = ?", topic).
+		Select("file_did").
+		First(&fileDID).
+		Error
+
+	if err != nil {
+		return "", fmt.Errorf("failed to get fileDID by topic: %w", err)
+	}
+	return fileDID, nil
 }

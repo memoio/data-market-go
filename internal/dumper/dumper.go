@@ -12,6 +12,7 @@ import (
 	"github.com/data-market/internal/go-contracts/accountdid"
 	"github.com/data-market/internal/go-contracts/ifiledid"
 	"github.com/data-market/internal/logs"
+	"gorm.io/gorm"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -33,6 +34,9 @@ var (
 )
 
 type Dumper struct {
+	// db pointer
+	db *gorm.DB
+
 	// chain
 	endpoint string
 	// chainid
@@ -234,6 +238,9 @@ func (d *Dumper) unpack(log types.Log, ABI abi.ABI, out interface{}) error {
 
 // get did contract address from instance, and get endpoint
 func (d *Dumper) Init(env string) (err error) {
+	// set db pointer
+	d.db = database.G_DB
+
 	// set block number, for test chain only
 	blockNumber, err := database.GetBlockNumber()
 	if err != nil {
