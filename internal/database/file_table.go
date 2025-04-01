@@ -22,6 +22,7 @@ type File struct {
 	ViewCount     int        `gorm:"default:0;column:view_count"`
 	ETag          string     `gorm:"unique;column:e_tag"`
 	FileDID       string     `gorm:"unique;index:idx_file_did;column:file_did"`
+	FileDIDTopic  string     `gorm:"unique;index:idx_file_did_topic;column:file_did_topic"`
 	ControllerDID string     `gorm:"unique;index:idx_controller_did;column:controller_did"`
 
 	// 组合索引（注意：字段需要实际存储数据，否则索引无效）

@@ -170,6 +170,7 @@ func (h *handler) uploadFile(c *gin.Context) {
 	// 	return err
 	// }
 
+	// todo: make filedid with cid; calc filedid hash and store file info into db;
 }
 
 // Files godoc
