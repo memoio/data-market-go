@@ -37,10 +37,18 @@ func (d *Dumper) HandleGrantRead(log types.Log) error {
 
 	logger.Debug("filedid:", fileDid)
 
-	// get the owner address with filedid
-	ownerAddr, err := d.getOwner(fileDid)
+	// get the controller of this filedid
+	controllerAddr, err := d.getController(fileDid)
 	if err != nil {
-		logger.Debug("get owner address with filedid failed: ", err)
+		logger.Debug("get controller of this filedid failed: ", err)
+		return err
+	}
+
+	logger.Debug("controller:", controllerAddr)
+
+	owner, err := d.getOnwer(controllerAddr)
+	if err != nil {
+		logger.Debug("get owner of this controller failed: ", err)
 		return err
 	}
 
@@ -64,7 +72,7 @@ func (d *Dumper) HandleGrantRead(log types.Log) error {
 		FileDID:      fileDid,
 		MemoDID:      out.MemoDid,
 		UserAddress:  addressHex,
-		OwnerAddress: ownerAddr,
+		OwnerAddress: owner,
 		AddTime:      buyTime,
 		AddType:      1, // 1 for buyRead, 2 for grantRead
 	}

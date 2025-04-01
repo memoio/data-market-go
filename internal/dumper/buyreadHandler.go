@@ -3,6 +3,7 @@ package dumper
 import (
 	"context"
 	"fmt"
+	"log"
 	"math/big"
 	"time"
 
@@ -50,10 +51,19 @@ func (d *Dumper) HandleBuyRead(log types.Log) error {
 
 	logger.Debug("filedid:", fileDid)
 
-	// get the owner address with filedid
-	ownerAddr, err := d.getOwner(fileDid)
+	// get the controller of this filedid
+	controllerAddr, err := d.getController(fileDid)
 	if err != nil {
-		logger.Debug("get owner address with filedid failed: ", err)
+		logger.Debug("get controller of this filedid failed: ", err)
+		return err
+	}
+
+	logger.Debug("controller:", controllerAddr)
+
+	// get owner of this controller did
+	owner, err := d.getOnwer(controllerAddr)
+	if err != nil {
+		logger.Debug("get owner of this controller failed: ", err)
 		return err
 	}
 
@@ -77,7 +87,7 @@ func (d *Dumper) HandleBuyRead(log types.Log) error {
 		FileDID:      fileDid,
 		MemoDID:      out.MemoDid,
 		UserAddress:  addressHex,
-		OwnerAddress: ownerAddr,
+		OwnerAddress: owner,
 		AddTime:      buyTime,
 		AddType:      1, // 1 for buyRead, 2 for grantRead
 	}
@@ -92,8 +102,8 @@ func (d *Dumper) HandleBuyRead(log types.Log) error {
 	return nil
 }
 
-// get owner with filedid
-func (d *Dumper) getOwner(filedid string) (string, error) {
+// get controller with filedid
+func (d *Dumper) getController(filedid string) (string, error) {
 	// connect endpoint
 	client, err := ethclient.DialContext(context.Background(), d.endpoint)
 	if err != nil {
@@ -119,12 +129,12 @@ func (d *Dumper) getOwner(filedid string) (string, error) {
 	}
 
 	// call getController in proxy
-	owner, err := proxyIns.GetController(&bind.CallOpts{}, filedid)
+	controller, err := proxyIns.GetController(&bind.CallOpts{}, filedid)
 	if err != nil {
 		return "", err
 	}
 
-	return owner, nil
+	return controller, nil
 }
 
 // get the buy time with block number(buyRead onchain)
@@ -166,4 +176,31 @@ func (d *Dumper) GetFileDIDByTopic(topic string) (string, error) {
 		return "", fmt.Errorf("failed to get fileDID by topic: %w", err)
 	}
 	return fileDID, nil
+}
+
+// get the owner of a controller
+func (d *Dumper) getOnwer(controller string) (string, error) {
+
+	eth := d.endpoint
+	proxyAddr := d.proxy_ADDR
+
+	// connect endpoint
+	client, err := ethclient.DialContext(context.Background(), eth)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// get proxy instance
+	proxyIns, err := proxy.NewProxy(proxyAddr, client)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// get owner address from proxy
+	owner, err := proxyIns.GetMasterKeyAddr(&bind.CallOpts{}, controller)
+	if err != nil {
+		return "", err
+	}
+
+	return owner.String(), nil
 }
