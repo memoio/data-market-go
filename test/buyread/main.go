@@ -20,8 +20,8 @@ var (
 	eth     string
 	adminSk string
 
-	l     = "1000000000000000000000000000000014def9dea2f79cd65812631a5cf5d3ed"
-	lBase = "14def9dea2f79cd65812631a5cf5d3ed"
+	// l     = "1000000000000000000000000000000014def9dea2f79cd65812631a5cf5d3ed"
+	// lBase = "14def9dea2f79cd65812631a5cf5d3ed"
 
 	allGas = make([]uint64, 0)
 
@@ -35,7 +35,7 @@ var (
 	// scalar = big.NewInt(12)
 )
 
-//go run buyread.go -eth=dev -sk=0a95533a110ee10bdaa902fed92e56f3f7709a532e22b5974c03c0251648a5d4
+//go run main.go -eth=dev -sk=0a95533a110ee10bdaa902fed92e56f3f7709a532e22b5974c03c0251648a5d4
 
 func main() {
 	chain := flag.String("eth", "test", "eth api Address;") //dev test or product
@@ -100,16 +100,10 @@ func main() {
 	// user sk and did
 	user_sk := "9db5e51e62c438bc32e0137bab95d73892d057faeea15d9868eb71c983945a80"
 	user_addr := "0x1E571f8a8Ad450A9453975B4207D40B25B16741b"
-	did := "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f20"
+	memodid := "did:memo:f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f20"
 	fmt.Println("user sk: ", user_sk)
 	fmt.Println("user address: ", user_addr)
-	fmt.Println("did: ", did)
-
-	// user auth
-	userAuth, err := com.MakeAuth(chainId, user_sk)
-	if err != nil {
-		log.Fatal(err)
-	}
+	fmt.Println("memodid: ", memodid)
 
 	// get erc20 address from instance
 	erc20Addr, err := instanceIns.Instances(&bind.CallOpts{From: com.AdminAddr}, com.TypeERC20)
@@ -145,7 +139,7 @@ func main() {
 	fmt.Println()
 
 	// approve to ControlFileDid
-	userAuth, err = com.MakeAuth(chainId, user_sk)
+	userAuth, err := com.MakeAuth(chainId, user_sk)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -165,7 +159,7 @@ func main() {
 	fmt.Println("call proxy.BuyRead")
 
 	// call buyRead
-	tx, err = proxyIns.BuyRead(userAuth, fdid, did)
+	tx, err = proxyIns.BuyRead(userAuth, fdid, memodid)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -175,7 +169,11 @@ func main() {
 	}
 
 	// check read status about this filedid and did
-	r, err := proxyIns.Read(&bind.CallOpts{}, fdid, did)
+	r, err := proxyIns.Read(&bind.CallOpts{}, fdid, memodid)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	fmt.Println("read status: ", r)
 	if r != 1 {
 		log.Fatal("read status must be 1 for buy read")

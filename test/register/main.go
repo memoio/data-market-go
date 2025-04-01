@@ -61,8 +61,8 @@ var (
 	instanceAddr common.Address
 )
 
-//go run register.go -eth=test -sk=0a95533a110ee10bdaa902fed92e56f3f7709a532e22b5974c03c0251648a5d4
-//go run register.go -eth=dev -sk=0a95533a110ee10bdaa902fed92e56f3f7709a532e22b5974c03c0251648a5d4
+//go run main.go -eth=test -sk=0a95533a110ee10bdaa902fed92e56f3f7709a532e22b5974c03c0251648a5d4
+//go run main.go -eth=dev -sk=0a95533a110ee10bdaa902fed92e56f3f7709a532e22b5974c03c0251648a5d4
 
 func main() {
 	chain := flag.String("eth", "test", "eth api Address;") //dev test or product

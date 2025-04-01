@@ -36,9 +36,9 @@ var (
 	// scalar = big.NewInt(12)
 )
 
-//go run createdid.go -eth=test -sk=0a95533a110ee10bdaa902fed92e56f3f7709a532e22b5974c03c0251648a5d4 -sk1=9b4fc2a14cbc63a0d338377413ca72949cbb2fd5be1b08844b4b5e332597d91e
-//go run createdid.go -eth=test -sk=0a95533a110ee10bdaa902fed92e56f3f7709a532e22b5974c03c0251648a5d4
-//go run createdid.go -eth=dev -sk=0a95533a110ee10bdaa902fed92e56f3f7709a532e22b5974c03c0251648a5d4
+//go run main.go -eth=test -sk=0a95533a110ee10bdaa902fed92e56f3f7709a532e22b5974c03c0251648a5d4 -sk1=9b4fc2a14cbc63a0d338377413ca72949cbb2fd5be1b08844b4b5e332597d91e
+//go run main.go -eth=test -sk=0a95533a110ee10bdaa902fed92e56f3f7709a532e22b5974c03c0251648a5d4
+//go run main.go -eth=dev -sk=0a95533a110ee10bdaa902fed92e56f3f7709a532e22b5974c03c0251648a5d4
 
 func main() {
 	chain := flag.String("eth", "test", "eth api Address;") //dev test or product

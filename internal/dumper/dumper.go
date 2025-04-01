@@ -184,10 +184,10 @@ func (d *Dumper) Dump(client *ethclient.Client) error {
 				}
 			case "GrantRead":
 				logger.Debug("#### Handle GrantRead Event")
-				err = d.HandleBuyRead(event)
-				if err != nil {
-					logger.Debug("handle GrantRead error: ", err.Error())
-				}
+				// err = d.HandleBuyRead(event)
+				// if err != nil {
+				// 	logger.Debug("handle GrantRead error: ", err.Error())
+				// }
 
 			default:
 				continue
