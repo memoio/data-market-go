@@ -20,9 +20,9 @@ type File struct {
 	PurchaseCount  int        `gorm:"default:0;column:purchase_count"`
 	DownloadCount  int        `gorm:"default:0;column:download_count"`
 	ViewCount      int        `gorm:"default:0;column:view_count"`
-	ETag           string     `gorm:"unique;column:e_tag"`
-	FileDID        string     `gorm:"unique;index:idx_file_did;column:file_did"`
-	FileDIDTopic   string     `gorm:"unique;index:idx_file_did_topic;column:file_did_topic"`
+	ETag           string     `gorm:"column:e_tag"`
+	FileDID        string     `gorm:"index:idx_file_did;column:file_did"`
+	FileDIDTopic   string     `gorm:"index:idx_file_did_topic;column:file_did_topic"`
 	ControllerDID  string     `gorm:"index:idx_controller_did;column:controller_did"`
 	ControllerAddr string     `gorm:"index:idx_controller_addr;column:controller_addr"`
 
