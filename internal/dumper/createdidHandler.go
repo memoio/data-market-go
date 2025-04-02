@@ -44,7 +44,7 @@ func (d *Dumper) HandleCreateDID(log types.Log) error {
 	// make object for db store
 	memoDID := database.MemoDID{
 		MemoDID:     out.DID,
-		UserAddress: addressHex,
+		UserAddress: "0x" + addressHex,
 	}
 
 	// store db
