@@ -492,7 +492,7 @@ func (h *handler) shareFile(c *gin.Context) {
 //	@Router			/files/{fileId}/publish [post]
 func (h *handler) publish(c *gin.Context) {
 	// 获取 file_id
-	fileID := c.Param("file_id")
+	fileID := c.Param("fileId")
 
 	// 查询当前文件的 publish_state
 	var file database.File

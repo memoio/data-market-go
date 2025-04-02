@@ -43,13 +43,12 @@ var (
 	controller_sk = "7ad6e373d75363a20a7851a00aa6204c52e70b26f5499c0ba32a119058d4afdd"
 	// controller addr: 0x1E571f8a8Ad450A9453975B4207D40B25B16741b
 
-	//controller_did = "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f81"
-	controller_did = "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f99"
+	controller_did = "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f81"
 
 	user_did = "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f22"
 
 	// file did
-	fdid = "did:mfile:mid:bafkreih6n5g5w4y6u7uvc4mh7jhjm7gidmkrbbpi7phyiyg54gplvngcpn"
+	fdid = "bafkreih6n5g5w4y6u7uvc4mh7jhjm7gidmkrbbpi7phyiyg54gplvngcpn"
 	// encode      = "mid"
 	// ftype       = uint8(0)        // 0:private; 1:public
 	// price       = big.NewInt(100) // attomemo
