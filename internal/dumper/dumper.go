@@ -151,7 +151,7 @@ func (d *Dumper) Dump(client *ethclient.Client) error {
 				d.delta = 10000
 			}
 		}
-		logger.Debug("event log number:", len(events))
+		//logger.Debug("event log number:", len(events))
 
 		tmp := 0
 		// parse each event

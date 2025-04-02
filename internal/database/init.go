@@ -80,11 +80,12 @@ func init() {
 	// 使用原生SQL执行语句插入一条初始记录到file表
 	result := db.Exec(`
     INSERT INTO file_info (
-        name, description, file_type, category, owner_address, 
+        file_id, name, description, file_type, category, owner_address, 
         upload_time, price, file_size, e_tag, file_did, 
         file_did_topic, controller_did, publish_state, publish_time, 
         index_file_type_category, index_file_type
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		1,
 		"sample_document.pdf",
 		"This is a sample document for demonstration",
 		"document",
@@ -104,17 +105,18 @@ func init() {
 	)
 
 	if result.Error != nil {
-		panic(result.Error)
+		logger.Debug(err)
 	}
 
 	// 第二条文件记录
 	result = db.Exec(`
     INSERT INTO file_info (
-        name, description, file_type, category, owner_address, 
+        file_id, name, description, file_type, category, owner_address, 
         upload_time, price, file_size, e_tag, file_did, 
         file_did_topic, controller_did, publish_state, publish_time, 
         index_file_type_category, index_file_type
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		2,
 		"sample_document.pdf",
 		"This is a sample document for demonstration",
 		"document",
@@ -134,7 +136,7 @@ func init() {
 	)
 
 	if result.Error != nil {
-		panic(result.Error)
+		logger.Debug(err)
 	}
 
 	// 手动创建组合索引（GORM 自动迁移可能不会处理）

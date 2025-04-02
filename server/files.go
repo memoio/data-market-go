@@ -541,7 +541,7 @@ func (h *handler) publish(c *gin.Context) {
 //	@Router			/files/{fileId}/unpublish [post]
 func (h *handler) unpublish(c *gin.Context) {
 	// 获取 file_id
-	fid := c.Param("file_id")
+	fid := c.Param("fileId")
 
 	// 更新 publish_state 为 2（已下架）
 	result := h.db.Model(&database.File{}).Where("file_id = ?", fid).Update("publish_state", 2)
