@@ -110,11 +110,11 @@ func (d *Dumper) Dump(client *ethclient.Client) error {
 			logger.Debug("get block number error:", err)
 			return err
 		}
-		logger.Info("dumping, get current block number from chain: ", chainBlock)
+		//logger.Info("dumping, get current block number from chain: ", chainBlock)
 
 		// if no new chain block, return
 		if d.fromBlock.Cmp(new(big.Int).SetUint64(chainBlock)) > 0 {
-			logger.Info("no new chain block, waiting..")
+			//logger.Info("no new chain block, waiting..")
 			return nil
 		}
 
@@ -126,9 +126,9 @@ func (d *Dumper) Dump(client *ethclient.Client) error {
 			toBlock = new(big.Int).Set(new(big.Int).SetUint64(chainBlock))
 		}
 
-		logger.Debugf("dump fromBlock: %s, toBlock: %s\n", d.fromBlock.String(), toBlock.String())
+		//logger.Debugf("dump fromBlock: %s, toBlock: %s\n", d.fromBlock.String(), toBlock.String())
 
-		logger.Debugf("filter event logs in %v blocks\n", d.delta)
+		//logger.Debugf("filter event logs in %v blocks\n", d.delta)
 		// filter event logs for all contracts
 		events, err := client.FilterLogs(context.TODO(), ethereum.FilterQuery{
 			FromBlock: d.fromBlock,
@@ -151,7 +151,7 @@ func (d *Dumper) Dump(client *ethclient.Client) error {
 				d.delta = 10000
 			}
 		}
-		logger.Debug("event log number:", len(events))
+		//logger.Debug("event log number:", len(events))
 
 		tmp := 0
 		// parse each event
@@ -204,7 +204,7 @@ func (d *Dumper) Dump(client *ethclient.Client) error {
 		d.fromBlock = toBlock.Add(toBlock, new(big.Int).SetInt64(1))
 
 		// update from block into db
-		logger.Debug("update from block into db: ", d.fromBlock)
+		//logger.Debug("update from block into db: ", d.fromBlock)
 		err = database.SetBlockNumber(d.fromBlock.Int64())
 		if err != nil {
 			return err
