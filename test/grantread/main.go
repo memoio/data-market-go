@@ -40,7 +40,7 @@ var (
 
 	// user sk and did, as the controller of this mfiledid
 	// dev chain
-	controller_sk  = "9db5e51e62c438bc32e0137bab95d73892d057faeea15d9868eb71c983945a80"
+	controller_sk  = "7ad6e373d75363a20a7851a00aa6204c52e70b26f5499c0ba32a119058d4afdd"
 	controller_did = "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f81"
 	// controller addr: 0x1E571f8a8Ad450A9453975B4207D40B25B16741b
 

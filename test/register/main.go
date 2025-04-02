@@ -46,8 +46,8 @@ var (
 	// user_sk = "11f797550cd4d77d08fd160047f9d55c8f468260c87e53a1f74505de4d9454be"
 	// did     = "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f18"
 	// dev chain
-	user_sk = "7ad6e373d75363a20a7851a00aa6204c52e70b26f5499c0ba32a119058d4afdd"
-	did     = "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f81"
+	controller_sk  = "7ad6e373d75363a20a7851a00aa6204c52e70b26f5499c0ba32a119058d4afdd"
+	controller_did = "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f81"
 
 	// file did
 	fdid   = "bafkreih6n5g5w4y6u7uvc4mh7jhjm7gidmkrbbpi7phyiyg54gplvngcpn"
@@ -141,14 +141,14 @@ func main() {
 
 	fmt.Println("call proxy.GetFileDidNonce")
 	// test call proxy.getNonce
-	n, err = proxyIns.GetFileDidNonce(&bind.CallOpts{}, did)
+	n, err = proxyIns.GetFileDidNonce(&bind.CallOpts{}, controller_did)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("nonce: ", n)
 
 	// str to ecdsa
-	ecdsaSk, err := crypto.HexToECDSA(user_sk)
+	ecdsaSk, err := crypto.HexToECDSA(controller_sk)
 	if err != nil {
 		// a random sk for wrong input
 		ecdsaSk, err = crypto.GenerateKey()
@@ -159,7 +159,7 @@ func main() {
 	privateKeyBytes := ecdsaSk.D.Bytes() // D 是私钥的 big.Int 值
 	fmt.Println("user sk:", hex.EncodeToString(privateKeyBytes))
 	fmt.Println("user addr:", crypto.PubkeyToAddress(ecdsaSk.PublicKey))
-	fmt.Println("did: ", did)
+	fmt.Println("did: ", controller_did)
 
 	//
 	fmt.Println("fdid: ", fdid)
@@ -193,7 +193,7 @@ func main() {
 	fmt.Println("buf len: ", len(priceBuf))
 
 	// make msg for sign
-	message := string("registerMfileDid") + fdid + encode + string(typeBuf[0]) + did + string(priceBuf) + string(nonceBuf)
+	message := string("registerMfileDid") + fdid + encode + string(typeBuf[0]) + controller_did + string(priceBuf) + string(nonceBuf)
 	// append keywords into message
 	for _, v := range keywords {
 		message += v
@@ -220,7 +220,7 @@ func main() {
 	fmt.Println("call proxy.RegisterMfileDid")
 
 	// admin register a file did
-	tx, err := proxyIns.RegisterMfileDid(txAuth, fdid, encode, ftype, did, price, keywords, signature)
+	tx, err := proxyIns.RegisterMfileDid(txAuth, fdid, encode, ftype, controller_did, price, keywords, signature)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -264,8 +264,8 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Println("file's controller:", mfileController)
-	if mfileController != did {
-		log.Fatal("file controller should be", did, ", but is", mfileController)
+	if mfileController != controller_did {
+		log.Fatal("file controller should be", controller_did, ", but is", mfileController)
 	}
 	// price
 	mfilePrice, err := proxyIns.GetPrice(&bind.CallOpts{From: com.AdminAddr}, fdid)
@@ -295,7 +295,7 @@ func main() {
 		log.Fatal("mfile should be activated")
 	}
 	// read
-	mfileRead, err := proxyIns.Read(&bind.CallOpts{From: com.AdminAddr}, fdid, did)
+	mfileRead, err := proxyIns.Read(&bind.CallOpts{From: com.AdminAddr}, fdid, controller_did)
 	if err != nil {
 		log.Fatal(err)
 	}
