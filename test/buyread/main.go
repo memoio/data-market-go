@@ -39,7 +39,7 @@ var (
 
 func main() {
 	chain := flag.String("eth", "test", "eth api Address;") //dev test or product
-	// TODO: read sk from local config
+
 	sk := flag.String("sk", "", "signature for sending transaction")
 
 	flag.Parse()

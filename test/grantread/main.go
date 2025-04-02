@@ -40,9 +40,11 @@ var (
 
 	// user sk and did, as the controller of this mfiledid
 	// dev chain
-	controller_sk  = "7ad6e373d75363a20a7851a00aa6204c52e70b26f5499c0ba32a119058d4afdd"
-	controller_did = "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f81"
+	controller_sk = "7ad6e373d75363a20a7851a00aa6204c52e70b26f5499c0ba32a119058d4afdd"
 	// controller addr: 0x1E571f8a8Ad450A9453975B4207D40B25B16741b
+
+	//controller_did = "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f81"
+	controller_did = "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f99"
 
 	user_did = "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f22"
 
@@ -69,10 +71,13 @@ func main() {
 
 	flag.Parse()
 
+	fmt.Println("chain: ", chain)
+
 	// get instance address and endpoint with chain
 	instanceAddr, eth = com.GetInsEndPointByChain(*chain)
 	adminSk = *sk
 	fmt.Println("instance address: ", instanceAddr)
+	fmt.Println("endpoint: ", eth)
 
 	// tx sk is a must
 	if len(adminSk) == 0 {
@@ -114,10 +119,6 @@ func main() {
 	_ = cfdidIns
 	var n uint64
 
-	// check FileDid address
-	fDidAddr, _ := instanceIns.Instances(&bind.CallOpts{From: com.AdminAddr}, com.TypeFileDid)
-	fmt.Println("FileDid address:", fDidAddr.Hex())
-
 	// get proxy address
 	proxyAddr, _ := instanceIns.Instances(&bind.CallOpts{From: com.AdminAddr}, com.TypeDidProxy)
 	fmt.Println("proxy address:", proxyAddr.Hex())
@@ -155,7 +156,7 @@ func main() {
 
 	// nonce
 	var nonceBuf = make([]byte, 8)
-	binary.BigEndian.PutUint64(nonceBuf, 1)
+	binary.BigEndian.PutUint64(nonceBuf, n)
 
 	// sign in controlFileDid
 	// bytes memory data = abi.encodePacked(
@@ -218,6 +219,6 @@ func main() {
 		log.Fatal("read status must be 2 for grant read")
 	}
 
-	fmt.Println("buy read ok")
+	fmt.Println("grant read ok")
 
 }
