@@ -1,1 +1,0 @@
-[{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"from","type":"address"},{"indexed":false,"internalType":"bool","name":"isSet","type":"bool"}],"name":"AddOwner","type":"event"}]
