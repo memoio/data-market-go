@@ -156,7 +156,7 @@ func (d *Dumper) Dump(client *ethclient.Client) error {
 		tmp := 0
 		// parse each event
 		for _, event := range events {
-			// topic0 is the event name
+			// topic0 is the event hash
 			eventName, ok1 := d.eventNameMap[event.Topics[0]]
 			if !ok1 {
 				continue
@@ -221,14 +221,13 @@ func (d *Dumper) unpack(log types.Log, ABI abi.ABI, out interface{}) error {
 	// get all topics
 	indexed := d.indexedMap[log.Topics[0]]
 
-	// parse data
-	err := ABI.UnpackIntoInterface(out, eventName, log.Data)
+	// parse topic
+	err := abi.ParseTopics(out, indexed, log.Topics[1:])
 	if err != nil {
 		return err
 	}
-
-	// parse topic
-	err = abi.ParseTopics(out, indexed, log.Topics[1:])
+	// parse data
+	err = ABI.UnpackIntoInterface(out, eventName, log.Data)
 	if err != nil {
 		return err
 	}
