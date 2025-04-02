@@ -42,15 +42,23 @@ func (d *Dumper) HandleRegisterFileDID(log types.Log) error {
 
 	logger.Debug("controller:", controller)
 
+	controller_addr, err := d.getControllerAddr(controller)
+	if err != nil {
+		return err
+	}
+
+	logger.Debug("controller addr:", controller_addr)
+
 	// update file info, locate the file with etag
 	result := database.G_DB.Model(&database.File{}).
 		Where("e_tag = ?", out.FileDID). // filedid is the same as the etag of this file
 		Updates(database.File{
-			FileDID:       out.FileDID,
-			ControllerDID: controller,
-			PublishState:  1,    // 设置为已上架
-			PublishTime:   &now, // 设置为当前时间
-			Price:         price.String(),
+			FileDID:        out.FileDID,
+			ControllerDID:  controller,
+			ControllerAddr: controller_addr,
+			PublishState:   1,    // 设置为已上架
+			PublishTime:    &now, // 设置为当前时间
+			Price:          price.String(),
 		})
 
 	if result.Error != nil {
@@ -96,29 +104,29 @@ func (d *Dumper) getControllerAndPrice(fid string) (string, *big.Int, error) {
 	return controller, price, nil
 }
 
-// // get owner of this controller
-// func (d *Dumper) getOnwer(controller string) (string, error) {
+// get addr of this controller
+func (d *Dumper) getControllerAddr(controller string) (string, error) {
 
-// 	eth := d.endpoint
-// 	proxyAddr := d.proxy_ADDR
+	eth := d.endpoint
+	proxyAddr := d.proxy_ADDR
 
-// 	// connect endpoint
-// 	client, err := ethclient.DialContext(context.Background(), eth)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
+	// connect endpoint
+	client, err := ethclient.DialContext(context.Background(), eth)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-// 	// get proxy instance
-// 	proxyIns, err := proxy.NewProxy(proxyAddr, client)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
+	// get proxy instance
+	proxyIns, err := proxy.NewProxy(proxyAddr, client)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-// 	// get owner address from proxy
-// 	owner, err := proxyIns.GetMasterKeyAddr(&bind.CallOpts{}, controller)
-// 	if err != nil {
-// 		return "", err
-// 	}
+	// get controller address from proxy
+	addr, err := proxyIns.GetMasterKeyAddr(&bind.CallOpts{}, controller)
+	if err != nil {
+		return "", err
+	}
 
-// 	return owner.String(), nil
-// }
+	return addr.String(), nil
+}

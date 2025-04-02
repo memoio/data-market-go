@@ -25,32 +25,16 @@ var (
 	eth   string
 	hexSk string
 
-	// sks   [5]string
-	// as    [5]common.Address
-
-	// hash  []byte
-	// signs [5][]byte
-
-	// txfee = big.NewInt(1e12)
-
-	// bigone       = big.NewInt(1)
-	// defaultNonce = big.NewInt(0)
-	// set          = true
-
 	allGas = make([]uint64, 0)
 
 	// methodType = "EcdsaSecp256k1VerificationKey2019"
 
-	// user sk and did, as the controller of this mfiledid
-	// test chain
-	// user_sk = "11f797550cd4d77d08fd160047f9d55c8f468260c87e53a1f74505de4d9454be"
-	// did     = "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f18"
 	// dev chain
 	controller_sk  = "7ad6e373d75363a20a7851a00aa6204c52e70b26f5499c0ba32a119058d4afdd"
 	controller_did = "f3053946d7fcb75e380f8e4151ded1456abe67dd7607101fdd9cc19c0d1b3f81"
 
 	// file did
-	fdid   = "bafkreih6n5g5w4y6u7uvc4mh7jhjm7gidmkrbbpi7phyiyg54gplvngcpn"
+	fdid   = "bafkreih6n5g5w4y6u7uvc4mh7jhjm7gidmkrbbpi7phyiyg54gplvngcpo"
 	encode = "mid"
 	ftype  = uint8(0) // 0:private; 1:public
 	// price       = big.NewInt(100) // attomemo
@@ -97,7 +81,7 @@ func main() {
 		log.Fatal(err)
 	}
 	// make auth
-	txAuth, err := com.MakeAuth(chainId, hexSk)
+	adminAuth, err := com.MakeAuth(chainId, hexSk)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -157,27 +141,16 @@ func main() {
 		}
 	}
 	privateKeyBytes := ecdsaSk.D.Bytes() // D 是私钥的 big.Int 值
-	fmt.Println("user sk:", hex.EncodeToString(privateKeyBytes))
-	fmt.Println("user addr:", crypto.PubkeyToAddress(ecdsaSk.PublicKey))
-	fmt.Println("did: ", controller_did)
+	fmt.Println("controller sk:", hex.EncodeToString(privateKeyBytes))
+	fmt.Println("controller addr:", crypto.PubkeyToAddress(ecdsaSk.PublicKey))
+	fmt.Println("controller did: ", controller_did)
 
 	//
 	fmt.Println("fdid: ", fdid)
 
 	// nonce
 	var nonceBuf = make([]byte, 8)
-	binary.BigEndian.PutUint64(nonceBuf, 0)
-
-	// sign in controlFileDid
-	// bytes memory data = abi.encodePacked(
-	// 	"registerMfileDid",
-	// 	mfileDid,
-	// 	encode,
-	// 	ftype,
-	// 	controller,
-	// 	price,
-	// 	nonce[controller]
-	// );
+	binary.BigEndian.PutUint64(nonceBuf, 1)
 
 	// type
 	var typeBuf = make([]byte, 8)
@@ -220,7 +193,7 @@ func main() {
 	fmt.Println("call proxy.RegisterMfileDid")
 
 	// admin register a file did
-	tx, err := proxyIns.RegisterMfileDid(txAuth, fdid, encode, ftype, controller_did, price, keywords, signature)
+	tx, err := proxyIns.RegisterMfileDid(adminAuth, fdid, encode, ftype, controller_did, price, keywords, signature)
 	if err != nil {
 		log.Fatal(err)
 	}
