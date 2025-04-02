@@ -151,7 +151,7 @@ func (d *Dumper) Dump(client *ethclient.Client) error {
 				d.delta = 10000
 			}
 		}
-		//logger.Debug("event log number:", len(events))
+		logger.Debug("event log number:", len(events))
 
 		tmp := 0
 		// parse each event
@@ -184,10 +184,10 @@ func (d *Dumper) Dump(client *ethclient.Client) error {
 				}
 			case "GrantRead":
 				logger.Debug("#### Handle GrantRead Event")
-				// err = d.HandleBuyRead(event)
-				// if err != nil {
-				// 	logger.Debug("handle GrantRead error: ", err.Error())
-				// }
+				err = d.HandleGrantRead(event)
+				if err != nil {
+					logger.Debug("handle GrantRead error: ", err.Error())
+				}
 
 			default:
 				continue

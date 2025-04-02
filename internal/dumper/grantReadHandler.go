@@ -74,7 +74,7 @@ func (d *Dumper) HandleGrantRead(log types.Log) error {
 		UserAddress:  addressHex,
 		OwnerAddress: owner,
 		AddTime:      buyTime,
-		AddType:      1, // 1 for buyRead, 2 for grantRead
+		AddType:      2, // 1 for buyRead, 2 for grantRead
 	}
 
 	// store db
