@@ -36,6 +36,7 @@ func (h *handler) getAddressProductList(c *gin.Context) {
 	err := h.db.Model(&database.File{}).
 		// 显式指定字段映射（数据库列名）
 		Select(
+			"file_id", // 新增主键字段
 			"name",
 			"file_did",
 			"file_type",
@@ -50,6 +51,11 @@ func (h *handler) getAddressProductList(c *gin.Context) {
 			"view_count",
 			"description",
 			"e_tag",
+			"file_did_topic",           // 新增字段
+			"controller_did",           // 新增字段
+			"controller_addr",          // 新增字段
+			"index_file_type_category", // 新增索引字段
+			"index_file_type",          // 新增索引字段
 		).
 		Where("owner_address = ?", ownerAddress). // 使用数据库列名
 		Order("upload_time DESC").
@@ -164,12 +170,16 @@ func (h *handler) getAddressPurchasedList(c *gin.Context) {
 		return
 	}
 
+	logger.Debug("owner address:", userAddress)
+
 	// 第一步：从FileMemo表中查询该用户的所有文件ID
 	var fileMemos []database.Access
-	if err := h.db.Where("user_address = ?", userAddress).Find(&fileMemos).Error; err != nil {
+	if err := h.db.Where("owner_address = ?", userAddress).Find(&fileMemos).Error; err != nil {
 		c.JSON(500, gin.H{"error": "failed to query file memos"})
 		return
 	}
+
+	logger.Debug("files:", fileMemos)
 
 	// 如果没有记录，直接返回空数组
 	if len(fileMemos) == 0 {

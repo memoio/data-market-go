@@ -2,6 +2,7 @@ package dumper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"math/big"
@@ -14,6 +15,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
+	"gorm.io/gorm"
 
 	proxy "did-solidity/go-contracts/proxy"
 
@@ -51,6 +53,20 @@ func (d *Dumper) HandleBuyRead(log types.Log) error {
 
 	logger.Debug("filedid:", fileDid)
 
+	var fileID uint
+
+	// get fileid from filedid
+	err = d.db.Model(&database.File{}).
+		Select("file_id").
+		Where("file_did = ?", fileDid).
+		First(&fileID).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("file with file_did '%s' not found", fileDid)
+		}
+		return fmt.Errorf("failed to query file_id: %v", err)
+	}
+
 	// get the controller of this filedid
 	controllerAddr, err := d.getController(fileDid)
 	if err != nil {
@@ -85,6 +101,7 @@ func (d *Dumper) HandleBuyRead(log types.Log) error {
 	// make object for db store
 	fileMemo := database.Access{
 		FileDID:      fileDid,
+		FileID:       fileID,
 		MemoDID:      out.MemoDid,
 		UserAddress:  addressHex,
 		OwnerAddress: owner,
