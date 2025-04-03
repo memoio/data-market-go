@@ -1,15 +1,14 @@
 package server
 
 import (
-	"bytes"
 	"fmt"
-	"io"
-	"mime/multipart"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/data-market/internal/database"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gin-gonic/gin"
 )
 
@@ -46,131 +45,147 @@ func (h *handler) uploadFile(c *gin.Context) {
 	// call registerMfileDid(string memory mfileDid, string memory _encode, FileType _ftype, string memory _controller, uint256 _price, string[] memory _keywords)
 	// params needed: mfiledid, encode, ftype(private/public), controller, price, keywords
 
-	// 获取客户端的 Authorization 头
-	authHeader := c.GetHeader("Authorization")
+	/*
+		// 获取客户端的 Authorization 头
+		authHeader := c.GetHeader("Authorization")
 
-	// 获取上传的文件
-	file, err := c.FormFile("file")
+		// 获取上传的文件
+		file, err := c.FormFile("file")
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "file is required"})
+			return
+		}
+
+		// 打开文件
+		fileReader, err := file.Open()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to open file"})
+			return
+		}
+		defer fileReader.Close()
+
+		// 创建一个缓冲区，用于构造 multipart/form-data 请求体
+		var requestBody bytes.Buffer
+		writer := multipart.NewWriter(&requestBody)
+
+		// 添加文件字段
+		filePart, err := writer.CreateFormFile("file", file.Filename)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create form file"})
+			return
+		}
+		// 拷贝文件数据到文件字段中
+		_, err = io.Copy(filePart, fileReader)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to copy file data"})
+			return
+		}
+
+		// 从表单获取参数
+		sign := c.PostForm("sign")
+		area := c.PostForm("area")
+
+		// 添加其他表单字段
+		_ = writer.WriteField("sign", sign) // 替换为实际的 sign 值
+		_ = writer.WriteField("area", area) // 替换为实际的 area 值
+
+		// 关闭 multipart writer
+		writer.Close()
+
+		// 创建 HTTP 请求
+		req, err := http.NewRequest("POST", "http://backend:8008/putObject", &requestBody)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create request"})
+			return
+		}
+
+		// 设置请求头
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+
+		// 将客户端的 Authorization 头添加到中间件的请求中
+		req.Header.Set("Authorization", authHeader)
+
+		// 发送请求
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to send request to backend"})
+			return
+		}
+		defer resp.Body.Close()
+
+		// 读取响应
+		respBody, err := io.ReadAll(resp.Body)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to read response from backend"})
+			return
+		}
+
+		// 返回中间件服务的响应
+		c.Data(resp.StatusCode, "application/json", respBody)
+
+	*/
+
+	// assume the uploaded file's cid is:
+	// bafkreih6n5g5w4y6u7uvc4mh7jhjm7gidmkrbbpi7phyiyg54gplvngcpk
+
+	// 从表单中获取文件基本信息
+	name := c.PostForm("name")
+	description := c.PostForm("description")
+	fileType := c.PostForm("file_type")
+	category := c.PostForm("category")
+	ownerAddress := c.PostForm("owner_address")
+	price := c.PostForm("price")
+
+	// 获取文件大小（可能需要从上传的文件中获取）
+	fileSizeStr := c.PostForm("file_size")
+	fileSize, err := strconv.ParseInt(fileSizeStr, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "file is required"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid file_size"})
 		return
 	}
 
-	// 打开文件
-	fileReader, err := file.Open()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to open file"})
-		return
+	eTag := "bafkreih6n5g5w4y6u7uvc4mh7jhjm7gidmkrbbpi7phyiyg54gplvngcpk"
+	fileDID := "bafkreih6n5g5w4y6u7uvc4mh7jhjm7gidmkrbbpi7phyiyg54gplvngcpk"
+	fileDIDTopic := crypto.Keccak256Hash([]byte(fileDID)).Hex()
+
+	// 创建文件记录
+	newFile := database.File{
+		Name:                  name,
+		Description:           description,
+		FileType:              fileType,
+		Category:              category,
+		OwnerAddress:          ownerAddress,
+		UploadTime:            time.Now(), // 当前时间
+		PublishState:          0,          // 默认未发布
+		PublishTime:           nil,        // NULL
+		Price:                 price,
+		FileSize:              fileSize,
+		PurchaseCount:         0, // 默认为0
+		DownloadCount:         0, // 默认为0
+		ViewCount:             0, // 默认为0
+		ETag:                  eTag,
+		FileDID:               fileDID,
+		FileDIDTopic:          fileDIDTopic,
+		ControllerDID:         "", // 留空
+		ControllerAddr:        "", // 留空
+		IndexFileTypeCategory: "", // 留空
+		IndexFileType:         "", // 留空
 	}
-	defer fileReader.Close()
 
-	// 创建一个缓冲区，用于构造 multipart/form-data 请求体
-	var requestBody bytes.Buffer
-	writer := multipart.NewWriter(&requestBody)
-
-	// 添加文件字段
-	filePart, err := writer.CreateFormFile("file", file.Filename)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create form file"})
-		return
-	}
-	// 拷贝文件数据到文件字段中
-	_, err = io.Copy(filePart, fileReader)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to copy file data"})
-		return
-	}
-
-	// 从表单获取参数
-	sign := c.PostForm("sign")
-	area := c.PostForm("area")
-
-	// 添加其他表单字段
-	_ = writer.WriteField("sign", sign) // 替换为实际的 sign 值
-	_ = writer.WriteField("area", area) // 替换为实际的 area 值
-
-	// 关闭 multipart writer
-	writer.Close()
-
-	// 创建 HTTP 请求
-	req, err := http.NewRequest("POST", "http://backend:8008/putObject", &requestBody)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create request"})
+	// 将记录插入数据库
+	if err := h.db.Create(&newFile).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "failed to create file record",
+			"details": err.Error(),
+		})
 		return
 	}
 
-	// 设置请求头
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-
-	// 将客户端的 Authorization 头添加到中间件的请求中
-	req.Header.Set("Authorization", authHeader)
-
-	// 发送请求
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to send request to backend"})
-		return
-	}
-	defer resp.Body.Close()
-
-	// 读取响应
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to read response from backend"})
-		return
-	}
-
-	// 返回中间件服务的响应
-	c.Data(resp.StatusCode, "application/json", respBody)
-
-	// 	代码说明
-	// 获取用户地址和文件：
-
-	// 使用 c.PostForm("address") 获取用户地址。
-
-	// 使用 c.FormFile("file") 获取上传的文件。
-
-	// 构造 multipart/form-data 请求体：
-
-	// 使用 multipart.NewWriter 创建一个 multipart/form-data 格式的请求体。
-
-	// 使用 writer.CreateFormFile 添加文件字段。
-
-	// 使用 writer.WriteField 添加其他表单字段（如 address、sign、area）。
-
-	// 创建 HTTP 请求：
-
-	// 使用 http.NewRequest 创建一个 POST 请求，目标地址为 http://backend:8008/putObject。
-
-	// 设置请求头 Content-Type 为 multipart/form-data。
-
-	// 发送请求并处理响应：
-
-	// 使用 http.Client 发送请求。
-
-	// 读取中间件服务的响应，并将其返回给客户端。
-
-	// 通过调用did合约的register方法来为文件注册did
-	// client, err := ethclient.DialContext(context.TODO(), c.endpoint)
-	// if err != nil {
-	// 	return err
-	// }
-	// defer client.Close()
-
-	// // todo: get proxyAddr from instance
-
-	// proxyIns, err := proxy.NewProxy(c.proxyAddr, client)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// tx, err := proxyIns.RegisterMfileDid(c.didTransactor, c.did.Identifier, encode, ftype, controller.Identifier, price, keywords)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// todo: make filedid with cid; calc filedid hash and store file info into db;
+	c.JSON(http.StatusOK, gin.H{
+		"message": "file uploaded successfully",
+		"file_id": newFile.FileID, // 返回自动生成的file_id
+	})
 }
 
 // Files godoc
