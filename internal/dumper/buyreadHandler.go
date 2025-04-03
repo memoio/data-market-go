@@ -103,7 +103,7 @@ func (d *Dumper) HandleBuyRead(log types.Log) error {
 		FileDID:      fileDid,
 		FileID:       fileID,
 		MemoDID:      out.MemoDid,
-		UserAddress:  addressHex,
+		UserAddress:  "0x" + addressHex,
 		OwnerAddress: owner,
 		AddTime:      buyTime,
 		AddType:      1, // 1 for buyRead, 2 for grantRead

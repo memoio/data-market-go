@@ -35,10 +35,10 @@ func (h *handler) getMarketAddressTransactionList(c *gin.Context) {
 		Select(`file_info.name AS file_name,
                 file_info.description,
                 file_info.price,
-                file_memo.buy_time,
-                file_memo.user_address AS buyer_address`).
-		Joins("INNER JOIN file_info ON file_memo.file_id = file_info.id").
-		Where("file_memo.user_address = ?", buyer).
+                access.add_time,
+                access.user_address AS buyer_address`).
+		Joins("INNER JOIN file_info ON access.file_id = file_info.file_id").
+		Where("access.user_address = ?", buyer).
 		Scan(&records).Error
 	if err != nil {
 		c.JSON(500, gin.H{
