@@ -15,8 +15,8 @@ import (
 var logger = logs.Logger("server")
 
 type handler struct {
-	endpoint string
-	db       *gorm.DB
+	//endpoint string
+	db *gorm.DB
 }
 
 // Path: server/server.go

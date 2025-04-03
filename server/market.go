@@ -63,5 +63,6 @@ func (h *handler) getMarketAddressTransactionList(c *gin.Context) {
 //	@Success		200		{object}	object
 //	@Router			/market/purchase [post]
 func (h *handler) postMarketPurchase(c *gin.Context) {
+	// 前端直接调用did合约的buyRead接口实现用户购买并获取一个指定文件的访问权限
 	c.JSON(200, gin.H{})
 }
