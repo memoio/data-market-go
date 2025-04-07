@@ -1,10 +1,8 @@
 package server
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/data-market/internal/database"
@@ -199,75 +197,100 @@ func (h *handler) uploadFile(c *gin.Context) {
 //	@Failure		501		{object}	object
 //	@Router			/files/{fileId}/download [get]
 func (h *handler) downloadFile(c *gin.Context) {
+	userAddr := c.Query("addr")
 	// get fileid
 	fid := c.Param("fileId")
 
-	logger.Debug("file id:", fid)
-
-	// get filedid from file table
+	// query file with fileid
 	var file database.File
-
 	// 使用 GORM 查询数据库
 	result := h.db.First(&file, fid)
 	if result.Error != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
 		return
 	}
+	cid := file.ETag
+	logger.Debug("file cid:", cid)
 
-	fileDID := file.FileDID
+	// download time
+	dlTime := time.Now()
 
-	logger.Debug("file did:", fileDID)
+	// new download record
+	dl := database.Download{
+		UserAddress:  userAddr,
+		FileID:       file.FileID,
+		DownloadDate: dlTime,
+	}
 
-	// get cid from file did
-	parts := strings.Split(fileDID, ":")
-	cid := parts[len(parts)]
-	logger.Debug("cid:", cid)
-
-	// 构造中间件的URL
-	middlewareURL := fmt.Sprintf("http://localhost:8080//ipfs/getObject/%s", cid)
-
-	// 从请求中获取必要的参数
-	sign := c.Query("sign")
-
-	// 获取客户端的 Authorization 头
-	authHeader := c.GetHeader("Authorization")
-
-	// 构造请求
-	req, err := http.NewRequest("GET", middlewareURL, nil)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create request"})
+	// 将记录插入数据库
+	if err := h.db.Create(&dl).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "failed to create download record",
+			"details": err.Error(),
+		})
 		return
 	}
 
-	// 添加必要的参数和头信息
-	query := req.URL.Query()
-	query.Add("sign", sign)
-	req.URL.RawQuery = query.Encode()
+	c.JSON(http.StatusOK, gin.H{
+		"message":       "file download successfully",
+		"user":          userAddr,
+		"file id":       file.FileID, // 返回自动生成的file_id
+		"download time": dlTime,
+	})
 
-	// 将客户端的 Authorization 头添加到中间件的请求中
-	req.Header.Set("Authorization", authHeader)
+	// // get cid from file did
+	// parts := strings.Split(fileDID, ":")
+	// cid := parts[len(parts)]
+	// logger.Debug("cid:", cid)
 
-	// 发送请求
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send request to middleware"})
-		return
-	}
-	defer resp.Body.Close()
+	/*
+		// 构造中间件的URL
+		middlewareURL := fmt.Sprintf("http://localhost:8080//ipfs/getObject/%s", cid)
 
-	// 检查中间件返回的状态码
-	if resp.StatusCode != http.StatusOK {
-		c.JSON(resp.StatusCode, gin.H{"error": "Middleware returned an error"})
-		return
-	}
+		// 从请求中获取必要的参数
+		sign := c.Query("sign")
 
-	// 将中间件返回的文件流直接转发给客户端
-	extraHeaders := map[string]string{
-		"Content-Disposition": resp.Header.Get("Content-Disposition"),
-	}
+		// 获取客户端的 Authorization 头
+		authHeader := c.GetHeader("Authorization")
 
-	c.DataFromReader(resp.StatusCode, resp.ContentLength, resp.Header.Get("Content-Type"), resp.Body, extraHeaders)
+		// 构造请求
+		req, err := http.NewRequest("GET", middlewareURL, nil)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create request"})
+			return
+		}
+
+		// 添加必要的参数和头信息
+		query := req.URL.Query()
+		query.Add("sign", sign)
+		req.URL.RawQuery = query.Encode()
+
+		// 将客户端的 Authorization 头添加到中间件的请求中
+		req.Header.Set("Authorization", authHeader)
+
+		// 发送请求
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send request to middleware"})
+			return
+		}
+		defer resp.Body.Close()
+
+		// 检查中间件返回的状态码
+		if resp.StatusCode != http.StatusOK {
+			c.JSON(resp.StatusCode, gin.H{"error": "Middleware returned an error"})
+			return
+		}
+
+		// 将中间件返回的文件流直接转发给客户端
+		extraHeaders := map[string]string{
+			"Content-Disposition": resp.Header.Get("Content-Disposition"),
+		}
+
+		c.DataFromReader(resp.StatusCode, resp.ContentLength, resp.Header.Get("Content-Type"), resp.Body, extraHeaders)
+
+	*/
 
 	// 解释代码
 	// 构造中间件的URL：你需要指定中间件的地址和路径。
@@ -291,6 +314,7 @@ func (h *handler) downloadFile(c *gin.Context) {
 	// 发送请求：使用 http.Client 发送请求到中间件。
 
 	// 处理响应：检查中间件返回的状态码，如果状态码不是 200，则返回错误。否则，将中间件返回的文件流直接转发给客户端。
+
 }
 
 // Files godoc
